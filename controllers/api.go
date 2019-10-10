@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/validation"
 	"github.com/painterQ/painterBlog/models"
 	"net/http"
@@ -151,28 +152,28 @@ func (a *APIController) ApiPostAdd() {
 	text := a.Input().Get("text")
 	date := a.Input().Get("date")
 	serie := a.Input().Get("serie")
-	tag := a.Input().Get("tags")
+	//tag := a.Input().Get("tags")
 	update := a.Input().Get("update")
-	cidStr := a.Input().Get("cid"))
-
+	cidStr := a.Input().Get("cid")
+	var err error
 	defer func() {
 		switch do {
 		case "auto": // 自动保存
 			if err != nil {
-				c.JSON(http.StatusOK, gin.H{"fail": FAIL, "time": time.Now().Format("15:04:05 PM"), "cid": cid})
+				//a.JSON(http.StatusOK, gin.H{"fail": FAIL, "time": time.Now().Format("15:04:05 PM"), "cid": cid})
 				return
 			}
-			c.JSON(http.StatusOK, gin.H{"success": SUCCESS, "time": time.Now().Format("15:04:05 PM"), "cid": cid})
+			//a.JSON(http.StatusOK, gin.H{"success": SUCCESS, "time": time.Now().Format("15:04:05 PM"), "cid": cid})
 		case "save", "publish": // 草稿，发布
 			if err != nil {
-				responseNotice(c, NOTICE_NOTICE, err.Error(), "")
+				//responseNotice(c, NOTICE_NOTICE, err.Error(), "")
 				return
 			}
 			uri := "/admin/manage-draft"
 			if do == "publish" {
 				uri = "/admin/manage-posts"
 			}
-			c.Redirect(http.StatusFound, uri)
+			a.Redirect(uri,http.StatusFound)
 		}
 	}()
 
@@ -193,13 +194,12 @@ func (a *APIController) ApiPostAdd() {
 		Title:      title,
 		Content:    text,
 		Slug:       slug,
-		CreateTime: CheckDate(date),
 		IsDraft:    do != "publish",
 		Author:     models.ManagerSingleCase.Username(),
 		//todo tags
 		SerieID:    0,
 		Tags:       []string{"壹","贰"},
-		CreateTime: time.Now(),
+		CreateTime: CheckDate(date),
 		UpdateTime: time.Now(),
 		DeleteTime: time.Time{},
 	}
@@ -210,7 +210,10 @@ func (a *APIController) ApiPostAdd() {
 	}else {	//新文章
 
 	}
-
+	err = models.Save(artc)
+	if err != nil{
+		logs.Error("save art err:"+err.Error())
+	}
 }
 
 //ApiManagePosts 管理文章

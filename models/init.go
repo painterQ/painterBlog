@@ -31,6 +31,7 @@ func init() {
 
 	pwd, err := os.Getwd()
 	if err != nil {
+		logs.Info("get db path err: %v",err)
 		panic(err)
 	}
 	dbPath = path.Join(pwd, beego.AppConfig.String("dbPath"))
@@ -38,15 +39,19 @@ func init() {
 	if os.IsNotExist(err) {
 		err = os.Mkdir(dbPath, 0777)
 		if err != nil {
+			logs.Info("get db path err: %v",err)
 			panic(err)
 		}
 	}
 	if !f.IsDir() {
+		logs.Info("get db path err: file mode : %v" ,f.Mode())
 		panic(dbPath + " is not dir!")
 	}
 	if f.Mode()&0700 != 0700 {
+		logs.Info("get db path err: file mode : %v" ,f.Mode())
 		panic(dbPath + " permission deny, please 'chmod'")
 	}
+	logs.Info("db path : %v ,find success",dbPath)
 }
 
 func init() {
