@@ -1,8 +1,8 @@
 package main
 
 import (
-	_ "github.com/painterQ/painterBlog/painterBlog/routers"
 	"github.com/astaxie/beego"
+	_ "github.com/painterQ/painterBlog/routers"
 )
 
 func main() {

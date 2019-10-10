@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+    <ShortName>Painter's Blog</ShortName>
+    <Description>不会飞的猪只是头普通的猪</Description>
+    <Url type="text/html" template="https://www.xixi201314.cn/search.html?q={searchTerms}" />
+</OpenSearchDescription>

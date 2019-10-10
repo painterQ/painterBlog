@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://www.xixi201314.cn/sitemap.xml
