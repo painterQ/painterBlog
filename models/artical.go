@@ -2,9 +2,10 @@ package models
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/gob"
 	"fmt"
-	"strconv"
+	"github.com/astaxie/beego/logs"
 	"time"
 )
 
@@ -55,12 +56,12 @@ func (s SortArticles) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
 
 func (a *Article) Encode() (v []byte) {
-	buf := make([]byte, 0, 512)
-	err := gob.NewEncoder(bytes.NewBuffer(buf)).Encode(a)
+	buf := bytes.NewBuffer(make([]byte, 0, 512))
+	err := gob.NewEncoder(buf).Encode(a)
 	if err != nil {
-		fmt.Println("####", err)
+		logs.Error(err)
 	}
-	return buf
+	return buf.Bytes()
 }
 
 func (a *Article) Decode(v []byte)(err error){
@@ -79,7 +80,11 @@ func (a *Article) Decode(v []byte)(err error){
 }
 
 func (a *Article) GetKey() (k []byte) {
-	return []byte(strconv.FormatInt(a.ID,10))
+	k = make([]byte,8)
+	binary.BigEndian.PutUint64(k, uint64(a.ID))
+	logs.Info("add key",k)
+	logs.Info(a.ID)
+	return
 }
 
 func (a *Article) DBName() string {

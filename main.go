@@ -5,7 +5,8 @@ import (
 	_ "github.com/painterQ/painterBlog/routers"
 )
 
+
+//go:generate  cd ./vue && cnpm run build
 func main() {
 	beego.Run()
 }
-

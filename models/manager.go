@@ -123,6 +123,7 @@ func (m *Manager) SetUsername(username string) {
 }
 
 func (m Manager) NewUpdate() ManagerUpdater {
+	logs.Error("Manager update")
 	return make(map[string]interface{}, 9)
 }
 

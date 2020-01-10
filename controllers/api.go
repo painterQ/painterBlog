@@ -153,7 +153,7 @@ func (a *APIController) ApiPostAdd() {
 	date := a.Input().Get("date")
 	serie := a.Input().Get("serie")
 	//tag := a.Input().Get("tags")
-	update := a.Input().Get("update")
+	//update := a.Input().Get("update")
 	cidStr := a.Input().Get("cid")
 	var err error
 	defer func() {
@@ -171,7 +171,7 @@ func (a *APIController) ApiPostAdd() {
 			}
 			uri := "/admin/manage-draft"
 			if do == "publish" {
-				uri = "/admin/manage-posts"
+				uri = "/admin/profile/manage-posts"
 			}
 			a.Redirect(uri,http.StatusFound)
 		}
@@ -180,8 +180,8 @@ func (a *APIController) ApiPostAdd() {
 	valid := validation.Validation{}
 	valid.Required(do, "do").Message("缺少do") // auto or save or publish
 	valid.Required(title, "title").Message("缺少title")
-	valid.Required(update, "update").Message("缺少update")
-	valid.Required(date, "date").Message("缺少date")
+	//valid.Required(update, "update").Message("缺少update")
+	//valid.Required(date, "date").Message("缺少date")
 	valid.Required(serie, "serie").Message("缺少serie")
 
 	if valid.HasErrors() {
@@ -191,6 +191,7 @@ func (a *APIController) ApiPostAdd() {
 	}
 
 	artc := &models.Article{
+		ID : time.Now().Unix(),
 		Title:      title,
 		Content:    text,
 		Slug:       slug,
@@ -214,6 +215,7 @@ func (a *APIController) ApiPostAdd() {
 	if err != nil{
 		logs.Error("save art err:"+err.Error())
 	}
+	//todo 哪里重定向到manage-post的？
 }
 
 //ApiManagePosts 管理文章
