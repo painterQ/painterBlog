@@ -1,0 +1,2 @@
+doc of tinymce https://www.tiny.cloud/docs/api/tinymce/root_tinymce/
+    https://yq.aliyun.com/articles/702778
