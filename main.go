@@ -5,8 +5,9 @@ import (
 	_ "github.com/painterQ/painterBlog/routers"
 )
 
-
-//go:generate  cd ./vue && cnpm run build
+//go:generate  go generate ./vue
 func main() {
+	beego.DelStaticPath("static")
+	beego.SetStaticPath("/", "./static")
 	beego.Run()
 }
