@@ -2,7 +2,7 @@ package models
 
 //DocumentDataBase document data base
 type DocumentDataBase interface {
-	Init(path string)error
+	Init(path string ,hookAfterInitDB func()error) (err error)
 	Close()
 
 	GetDocument(key []byte) (content []byte, err error)
