@@ -57,7 +57,7 @@ const store = new Vuex.Store({
         },
         docs: new DocListClass(init),
         docsUpdate: false,
-        total: 4
+        total: 0
     },
 
     mutations: {

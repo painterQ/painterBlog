@@ -9,7 +9,7 @@ class DocListClass {
         for (let index in set){
             this.docSet[set[index].id] = new Doc(set[index])
         }
-        this.updateList('/doc0',10)
+        this.updateList('/doca',10)
     }
 
     set(k, doc) {
@@ -61,6 +61,7 @@ class DocListClass {
         }
     }
 
+    //构造函数被调用
     async updateList(start='',length=10) {
         if (start === '') return;
         api.getDocsList({start:start,length: length}).then(
@@ -69,9 +70,9 @@ class DocListClass {
                 for (let index in set){
                     this.docSet[set[index].id] = new Doc(set[index])
                 }
-                console.log(data.data)
-                store.commit("setTotalDocs",data.data.total)
-                store.commit('setDocListUpdateState',set.length > 0);
+                console.log("获取文章元信息，返回值",data.data)
+                store.commit("setTotalDocs",data.data.total) //更新总数
+                store.commit('setDocListUpdateState',set.length > 0); //更新DocList
             }
         ).catch(err=>{console.log("getDocsList,err:",err)});
     }

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/painterQ/painterBlog/models"
@@ -17,7 +18,7 @@ var dbImpl *models.DocumentLevelDB
 
 func init() {
 	dbImpl = new(models.DocumentLevelDB)
-	err := dbImpl.Init("/tmp/123123", nil)
+	err := dbImpl.Init("/tmp/12312313", nil)
 	if err != nil {
 		panic(err)
 	}
@@ -30,21 +31,30 @@ func (d *DocumentsController) URLMapping() {
 	d.Mapping("GetDocumentsIDByTags", d.GetDocumentsIDByTags)
 }
 
-//GetDocument GetDocument
+//GetDocument 获取文章内容
+//method GET
+//path /docs
+//para id string
+//return string
 // @router / [get]
 func (d *DocumentsController) GetDocument() {
-	id := d.Input().Get("id")
+	id := d.Input().Get("doc")
 	if id == "" {
-
+		responseJson(d.Ctx,errors.New("para doc error"))
 	}
 	c, err := dbImpl.GetDocument([]byte(id))
-	if err != nil {
-		panic(err)
-	}
+	responseJson(d.Ctx,err)
 	_, _ = d.Ctx.ResponseWriter.Write(c)
 }
 
-//PostDocsList PostDocsList
+//PostDocsList 获取文章元信息
+//methos POST
+//path /docs
+//data {start:"/docc", length: 10}
+//return {[
+//		{"id":"first","title":"first","subTitle":"blog","tags":["blog","document"],"attr":0,"createTime":"0001-01-01T00:00:00Z","lastTime":"2020-01-26T15:35:30.653602+08:00","abstract":"PHA+Zmlyc3Q8L3A+"},
+//				{"id":"first","title":"first","subTitle":"blog","tags":["blog","document"],"attr":0,"createTime":"0001-01-01T00:00:00Z","lastTime":"2020-01-26T15:35:30.653602+08:00","abstract":"PHA+Zmlyc3Q8L3A+"}
+//		 ], total: 22}
 // @router / [post]
 func (d *DocumentsController) PostDocsList() {
 	fmt.Println("###GetDocsList")

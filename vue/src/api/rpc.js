@@ -21,7 +21,9 @@ function changePwdChange(info) {
     return util.post("/info/pwd", info)
 }
 
+//获取文章元信息
 function getDocsList(info) {
+    console.log("api, 获取文章元信息")
     return util.post("/docs", info)
 }
 /*
@@ -29,11 +31,13 @@ function getDocsList(info) {
 * data: {content: '文章'}  or {error: '...'}
 * */
 function getDoc(info) {
-    return util.get("/doc", info)
+    console.log("api, 获取文章内容")
+    return util.get("/docs", info)
 }
 
 //发表文章
 function postDoc(info){
+    console.log("api, 创建新的文章")
     //info: "{"title":"first","path":"first","document":"<p>第一篇文章</p>\n<p>&nbsp;</p>"}"}
     return util.post("/docs/doc", info)
 }

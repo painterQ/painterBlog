@@ -5,23 +5,24 @@ import (
 	"github.com/astaxie/beego/context"
 )
 
-func responseJson(ctx *context.Context, obj interface{})  {
-	if a ,ok := obj.(string);ok{
+func responseJson(ctx *context.Context, obj interface{}) {
+	if a, ok := obj.(string); ok {
 		_, _ = ctx.ResponseWriter.Write([]byte(a))
 		return
 	}
 
-	if a ,ok := obj.([]byte);ok{
+	if a, ok := obj.([]byte); ok {
 		_, _ = ctx.ResponseWriter.Write(a)
 		return
 	}
 
-	if a ,ok := obj.(error);ok{
+	if a, ok := obj.(error); ok && a != nil {
 		_, _ = ctx.ResponseWriter.Write([]byte(a.Error()))
+		ctx.Abort(501, a.Error())
 		return
 	}
-	byteArray,err := json.Marshal(obj)
-	if err != nil{
+	byteArray, err := json.Marshal(obj)
+	if err != nil {
 		panic(err)
 	}
 	_, _ = ctx.ResponseWriter.Write(byteArray)

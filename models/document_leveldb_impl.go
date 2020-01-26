@@ -2,6 +2,7 @@ package models
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
@@ -29,9 +30,10 @@ var (
 )
 
 type DocumentLevelDB struct {
-	dbPath string
-	db     *leveldb.DB
-	inited int32
+	dbPath   string
+	db       *leveldb.DB
+	docTotal int
+	inited   int32
 }
 
 func (ddb *DocumentLevelDB) Init(dbPath string, hookAfterInitDB func(dbPath string)) (err error) {
@@ -78,6 +80,9 @@ func (ddb *DocumentLevelDB) Init(dbPath string, hookAfterInitDB func(dbPath stri
 		_ = ddb.db.Put(tagPreFix, tagPreFix, nil)
 	}
 
+	//初始化docTotal
+	ddb.getSize()
+
 	if hookAfterInitDB != nil {
 		hookAfterInitDB(dbPath)
 	}
@@ -85,14 +90,28 @@ func (ddb *DocumentLevelDB) Init(dbPath string, hookAfterInitDB func(dbPath stri
 
 }
 
+func (ddb *DocumentLevelDB) getSize() {
+	iter := ddb.db.NewIterator(&util.Range{
+		Start: matePreFix,
+		Limit: tagPreFix,
+	}, nil)
+	ddb.docTotal = -1
+	for iter.Next() {
+		ddb.docTotal++
+	}
+}
+
 func (ddb *DocumentLevelDB) Close() {
 	_ = ddb.db.Close()
 }
 
 func (ddb *DocumentLevelDB) GetMate(key []byte, length int) ([]byte, error) {
-	if length > mateMaxNum {
-		return nil, errors.New("params error")
-	}
+	//todo get all
+	key = nil
+
+	// if length > mateMaxNum {
+	// 	return nil, errors.New("params error")
+	// }
 	iter := ddb.db.NewIterator(&util.Range{
 		Start: append(matePreFix, key...),
 		Limit: tagPreFix,
@@ -111,11 +130,15 @@ func (ddb *DocumentLevelDB) GetMate(key []byte, length int) ([]byte, error) {
 		logs.Error("GetMate error %v", err.Error())
 		return nil, err
 	}
-	if i == 0{
-		return []byte("[]"), nil
+	if i == 0 {
+		return []byte("{list:[],total:0}"), nil
 	}
-	tmp := bytes.Join(buf[:i], []byte{','})
-	return bytes.Join([][]byte{{'['}, tmp, {']'}}, nil), nil
+	tmp := bytes.Join(buf[1:i], []byte{','})
+	return bytes.Join([][]byte{[]byte(`{"list":[`),
+		tmp,
+		[]byte(`],`),
+		[]byte(fmt.Sprintf(`"total":%d}`, ddb.docTotal))},
+		nil), nil
 }
 
 func (ddb *DocumentLevelDB) GetDocument(key []byte) (content []byte, err error) {
@@ -169,10 +192,10 @@ func (ddb *DocumentLevelDB) GetDocumentByTag(tag []string) []string {
 //自动维护  calibration
 //使用事务
 func (ddb *DocumentLevelDB) Push(key, content []byte, mate *DocumentMate) (err error) {
-	if string(key) != mate.ID{
+	if string(key) != mate.ID {
 		return errors.New("para mot match")
 	}
-	if strings.Contains(mate.ID, "|"){
+	if strings.Contains(mate.ID, "|") {
 		return errors.New("paras error")
 	}
 
@@ -183,11 +206,13 @@ func (ddb *DocumentLevelDB) Push(key, content []byte, mate *DocumentMate) (err e
 			tx.Discard()
 		} else {
 			err = tx.Commit()
+			ddb.getSize()
 		}
 	}()
 
 	err = tx.Put(addDocPrefix(key), content, nil)
 	err = tx.Put(addMatePrefix(key), mateByte, nil)
+
 	for i := range mate.Tags {
 		tagKey := addTagPrefix([]byte(mate.Tags[i]))
 		ret, _ := tx.Has(tagKey, nil)

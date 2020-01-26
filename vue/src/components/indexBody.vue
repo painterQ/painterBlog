@@ -22,8 +22,8 @@
                         background
                         layout="prev, pager, next"
                         :current-page="this.currentPage"
-                        @current-change="this.totalNum"
-                        :total=getPaginationNum>
+                        @current-change="this.pageChange"
+                        :total=this.totalNum>
                 </el-pagination>
             </div>
         </div>
@@ -49,7 +49,7 @@
                 //pagination
                 currentPage: 0,
                 //[currentPage * pageSize, (currentPage + 1) * pageSize)
-                pageSize: 5,
+                pageSize: 10,
 
             }
         },
@@ -59,23 +59,13 @@
             },
             //[currentPage * pageSize, (currentPage + 1) * pageSize)
             docList() {
-                //1. 计算范围
-                //2. 判断范围内的是都都在中，如果没有，则获取
-                //3. 渲染
-                let currentList = [];
-                let self = this;
-                return function () {
-                    if (!self.$store.state.docsUpdate) {
-                        return currentList
-                    }
-                    self.$store.commit("setDocListUpdateState", false)
-                    let output = [];
-                    for (let e of self.$store.state.docs) {
-                        output.push(e)
-                    }
-                    currentList = output;
-                    return output
-                }()
+                console.log(this.$store.state.docsUpdate)
+                this.$store.commit("setDocListUpdateState", false)
+                let output = [];
+                for (let e of this.$store.state.docs){
+                    output.push(e)
+                }
+                return output
             }
         },
         methods: {
@@ -84,8 +74,8 @@
                 this.$router.push('/doc' + artID)
             },
             //pagination
-            handleCurrentChange() {
-                console.log("handleCurrentChange")
+            pageChange() {
+                console.log("pageChange")
             },
         },
     }

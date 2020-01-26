@@ -19,14 +19,14 @@ type DocumentDataBase interface {
 
 //DocumentMate mate of document
 type DocumentMate struct {
-	ID         string    `tag:"json:id"`
-	Title      string    `tag:"json:title"`
-	SubTitle   string    `tag:"json:subTitle"`
-	Tags       []string  `tag:"json:tags"`
-	Attr       int       `tag:"json:attr"`
-	CreateTime time.Time `tag:"json:createTime"`
-	LastTime   time.Time `tag:"json:lastTime"`
-	Abstract   string    `tag:"json:abstract"`
+	ID         string    `json:"id"`
+	Title      string    `json:"title"`
+	SubTitle   string    `json:"subTitle"`
+	Tags       []string  `json:"tags"`
+	Attr       int       `json:"attr"`
+	CreateTime time.Time `json:"createTime"`
+	LastTime   time.Time `json:"lastTime"`
+	Abstract   string    `json:"abstract"`
 }
 
 //Encode encode

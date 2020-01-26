@@ -167,3 +167,12 @@ $children
 $slots
 $ref
   
+
+
+index的Store初始化的时候会生成一个docList实例，实例初始化的时候会请求mate信息。这应该对应目录的第一页。
+{start: "/doc0", length: 10}
+
+DocList初始化的时候也能指定一些init，但是现在是空的。
+因此初始状态，DocList是空的, docsUpdate = flase, total=0
+
+目前一开始获取全部的mate
