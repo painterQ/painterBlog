@@ -54,7 +54,7 @@ Mock.mock('/info/pwd', 'post', (options) => {
     return {ok:true};
 });
 
-Mock.mock('/doc', 'post', (options) => {
+Mock.mock('/docs/doc', 'post', (options) => {
     console.log('options:', options);
     return {ok:true};
 });

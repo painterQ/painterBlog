@@ -9,7 +9,7 @@ class DocListClass {
         for (let index in set){
             this.docSet[set[index].id] = new Doc(set[index])
         }
-        this.updateList('/docc',10)
+        this.updateList('/doc0',10)
     }
 
     set(k, doc) {

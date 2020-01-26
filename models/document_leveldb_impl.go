@@ -1,10 +1,16 @@
 package models
 
 import (
+	"bytes"
 	"github.com/astaxie/beego/logs"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
+	"github.com/syndtr/goleveldb/leveldb/opt"
+	"github.com/syndtr/goleveldb/leveldb/util"
+	"gopkg.in/fatih/set.v0"
 	"os"
+	"strings"
+	"sync/atomic"
 )
 
 const (
@@ -12,49 +18,108 @@ const (
 	Top
 )
 
+const (
+	mateMaxNum = 20
+)
+
+var (
+	docPreFix  = []byte("internal__doc::")  //0
+	matePreFix = []byte("internal__mate::") //1
+	tagPreFix  = []byte("internal__tag::")  //2
+)
+
 type DocumentLevelDB struct {
 	dbPath string
-	db *leveldb.DB
-	tagMapDB *leveldb.DB
+	db     *leveldb.DB
+	inited int32
 }
 
-func (ddb * DocumentLevelDB)Init(path string ,hookAfterInitDB func()error) (err error){
-	create := func(newDB *leveldb.DB) error{
-		ddb.dbPath = path
-		ddb.db = newDB
-		if hookAfterInitDB != nil{
-			return hookAfterInitDB()
+func (ddb *DocumentLevelDB) Init(dbPath string, hookAfterInitDB func(dbPath string)) (err error) {
+	if !atomic.CompareAndSwapInt32(&ddb.inited, 0, 1) {
+		return errors.New("already init")
+	}
+	flagOld := false
+	openDB := func(path string) (newDB *leveldb.DB) {
+		db, err := leveldb.OpenFile(path, &opt.Options{
+			Comparer: new(DocumentComparer),
+		})
+		switch {
+		case errors.IsCorrupted(err):
+			logs.Error("database (%v) corrupted, process try to recover: %v", path, err.Error())
+			db, err = leveldb.RecoverFile(path, nil)
+			if err != nil {
+				logs.Error("try to recover fail: %v", path, err.Error())
+				return nil
+			}
+			return db
+		case err == os.ErrExist:
+			flagOld = true
+			logs.Warn("database (%v) is exist, use old database", path)
+			fallthrough
+		case err == nil:
+			return db
+		default:
+			logs.Error("opening database (%v) encountered unknown error: %v", path, err.Error())
+			return nil
 		}
-		return nil
 	}
 
- 	db, err := leveldb.OpenFile(path,nil)
-	switch  {
-	case errors.IsCorrupted(err):
-		logs.Error("database (%v) corrupted, process try to recover: %v",path, err.Error())
-		db,err = leveldb.RecoverFile(path, nil)
-		if err != nil{
-			logs.Error("try to recover fail: %v",path, err.Error())
-			return err
-		}
-		return create(db)
-	case err == os.ErrExist :
-		logs.Warn("database (%v) is exist, use old database",path)
-		fallthrough
-	case err == nil:
-		return create(db)
-	default:
-		logs.Error("opening database (%v) encountered unknown error: %v",path, err.Error())
-		return err
+	documentDB := openDB(dbPath)
+	if documentDB == nil {
+		return errors.New("init error")
 	}
+
+	ddb.dbPath = dbPath
+	ddb.db = documentDB
+
+	if !flagOld {
+		//插入分界的
+		_ = ddb.db.Put(matePreFix, matePreFix, nil)
+		_ = ddb.db.Put(tagPreFix, tagPreFix, nil)
+	}
+
+	if hookAfterInitDB != nil {
+		hookAfterInitDB(dbPath)
+	}
+	return nil
+
 }
 
-func (ddb * DocumentLevelDB)Close(){
+func (ddb *DocumentLevelDB) Close() {
 	_ = ddb.db.Close()
 }
 
-func (ddb * DocumentLevelDB)GetDocument(key []byte) (content []byte, err error){
-	content,err = ddb.db.Get(key, nil)
+func (ddb *DocumentLevelDB) GetMate(key []byte, length int) ([]byte, error) {
+	if length > mateMaxNum {
+		return nil, errors.New("params error")
+	}
+	iter := ddb.db.NewIterator(&util.Range{
+		Start: append(matePreFix, key...),
+		Limit: tagPreFix,
+	}, nil)
+	buf := make([][]byte, length)
+
+	var i int
+	for i = 0; i < length && iter.Next(); i++ {
+		tmp := iter.Value()
+		buf[i] = make([]byte, len(tmp))
+		copy(buf[i], tmp)
+	}
+	defer iter.Release()
+	err := iter.Error()
+	if err != nil {
+		logs.Error("GetMate error %v", err.Error())
+		return nil, err
+	}
+	if i == 0{
+		return []byte("[]"), nil
+	}
+	tmp := bytes.Join(buf[:i], []byte{','})
+	return bytes.Join([][]byte{{'['}, tmp, {']'}}, nil), nil
+}
+
+func (ddb *DocumentLevelDB) GetDocument(key []byte) (content []byte, err error) {
+	content, err = ddb.db.Get(addDocPrefix(key), nil)
 	switch err {
 	case leveldb.ErrNotFound:
 		return nil, os.ErrNotExist
@@ -65,12 +130,96 @@ func (ddb * DocumentLevelDB)GetDocument(key []byte) (content []byte, err error){
 	}
 }
 
+func (ddb *DocumentLevelDB) GetDocumentByTag(tag []string) []string {
+	if len(tag) > 4 || len(tag) < 1 {
+		return nil
+	}
 
+	setAll := set.New(set.NonThreadSafe)
+	v1, err1 := ddb.db.Get(addTagPrefix([]byte(tag[0])), nil)
+	if err1 != nil {
+		return nil
+	}
+	s1 := bytes.Split(v1, []byte{'|'})
+	for i := range s1 {
+		setAll.Add(string(s1[i]))
+	}
 
-func (ddb * DocumentLevelDB)GetDocumentByTag(tag ...string) [][]byte{
-	return nil
+	for i := 1; i < len(tag); i++ {
+		v, err := ddb.db.Get(addTagPrefix([]byte(tag[i])), nil)
+		if err != nil {
+			continue
+		}
+		s := bytes.Split(v, []byte{'|'})
+		tmp := set.New(set.NonThreadSafe)
+		for i := range s {
+			tmp.Add(string(s[i]))
+		}
+		setAll = set.Intersection(setAll, tmp)
+	}
+	list := setAll.List()
+	ret := make([]string, setAll.Size())
+	for i := range list {
+		ret[i] = list[i].(string)
+	}
+	return ret
 }
+
 //相同的key会覆盖
-func (ddb * DocumentLevelDB)Push(key ,content []byte, isDraft bool) (err error){
-	return ddb.db.Put(key, content, nil)
+//自动维护  calibration
+//使用事务
+func (ddb *DocumentLevelDB) Push(key, content []byte, mate *DocumentMate) (err error) {
+	if string(key) != mate.ID{
+		return errors.New("para mot match")
+	}
+	if strings.Contains(mate.ID, "|"){
+		return errors.New("paras error")
+	}
+
+	mateByte, _ := mate.Encode()
+	tx, err := ddb.db.OpenTransaction()
+	defer func() {
+		if err != nil {
+			tx.Discard()
+		} else {
+			err = tx.Commit()
+		}
+	}()
+
+	err = tx.Put(addDocPrefix(key), content, nil)
+	err = tx.Put(addMatePrefix(key), mateByte, nil)
+	for i := range mate.Tags {
+		tagKey := addTagPrefix([]byte(mate.Tags[i]))
+		ret, _ := tx.Has(tagKey, nil)
+		var v []byte
+		if ret { //tag 已经存在
+			v, _ = tx.Get(tagKey, nil)
+			if !bytes.Contains(v, key) {
+				v = bytes.Join([][]byte{v, {'|'}, key}, nil)
+			}
+			err = tx.Put(tagKey, v, nil)
+			if err != nil {
+				return
+			}
+		} else {
+			err = tx.Put(tagKey, key, nil)
+			if err != nil {
+				return
+			}
+		}
+
+	}
+	return
+}
+
+func addMatePrefix(key []byte) []byte {
+	return bytes.Join([][]byte{matePreFix, key}, nil)
+}
+
+func addDocPrefix(key []byte) []byte {
+	return bytes.Join([][]byte{docPreFix, key}, nil)
+}
+
+func addTagPrefix(key []byte) []byte {
+	return bytes.Join([][]byte{tagPreFix, key}, nil)
 }

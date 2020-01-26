@@ -1,24 +1,28 @@
 package controllers
 
 import (
-	"github.com/astaxie/beego"
-	"github.com/painterQ/painterBlog/utils"
+	"encoding/json"
+	"github.com/astaxie/beego/context"
 )
 
-var macKey = []byte{'0','2','5','5','1','9'}
+func responseJson(ctx *context.Context, obj interface{})  {
+	if a ,ok := obj.(string);ok{
+		_, _ = ctx.ResponseWriter.Write([]byte(a))
+		return
+	}
 
-func init() {
-	beego.SetStaticPath("static","static")
-	beego.AddTemplateExt("js")
-	beego.AddTemplateExt("css")
-	_ = beego.AddFuncMap("dateformat",utils.DateFormat)
-	_ = beego.AddFuncMap("str2html",utils.Str2html)
-	_ = beego.AddFuncMap("join",utils.Join)
-	_ = beego.AddFuncMap("isnotzero",utils.IsNotZero)
-	_ = beego.AddFuncMap("getavatar",utils.GetAvatar)
+	if a ,ok := obj.([]byte);ok{
+		_, _ = ctx.ResponseWriter.Write(a)
+		return
+	}
 
-	//err := beego.AddViewPath("./views/admin")
-	//if err !=nil{
-	//	panic(err)
-	//}
+	if a ,ok := obj.(error);ok{
+		_, _ = ctx.ResponseWriter.Write([]byte(a.Error()))
+		return
+	}
+	byteArray,err := json.Marshal(obj)
+	if err != nil{
+		panic(err)
+	}
+	_, _ = ctx.ResponseWriter.Write(byteArray)
 }

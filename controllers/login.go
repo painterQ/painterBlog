@@ -1,75 +1,57 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/logs"
-	"github.com/painterQ/painterBlog/models"
-	"strconv"
 	"strings"
 	"time"
 )
+
+var macKey = []byte{'1', '1', 1, '1', 1, '1', 1}
 
 type LoginController struct {
 	beego.Controller
 }
 
 func (lc *LoginController) URLMapping(){
-	lc.Mapping("Get", lc.Get)
-	lc.Mapping("Post", lc.Post)
+	lc.Mapping("Login", lc.Login)
 }
 
-// @router / [get]
-func (lc *LoginController) Get() {
-	lc.Data["Version"] = "1.0.1" //StaticVersion(c)
-	lc.Data["BTitle"] = "login"
-
-	isLogoutStr := lc.Input().Get("logout")
-	isLogout, err := strconv.ParseBool(isLogoutStr)
-	haveToken := checkToken(lc.Ctx)
-	if (err != nil || isLogout ) && haveToken{
-		lc.SetSecureCookie(string(macKey), "tk", "false")
-		lc.Redirect("/admin/login",302)
-		return
-	}else if haveToken{
-		lc.Redirect("/admin/profile",302)
-		return
-	}
-
-	lc.TplName = "admin/login.html"
-	err = lc.Render()
-}
-
+//Post post
+//method	POST
+//path		/login
+//data		{name:“admin”,password:"admin"}
+//return  	{status: 1,message: '登录成功'}
+//			{status: 0,message: '账号或者密码错误'}
 // @router / [post]
-func (lc *LoginController) Post() {
-	user := lc.Input().Get("user")
-	pwd := lc.Input().Get("password")
-	if user != pwd {
-		//lc.Ctx.Output.Status = 400
-		lc.SetSecureCookie(string(macKey), "tk", "",0, "/", nil, true)
-		lc.Redirect("/admin/login",302)
+func (lc *LoginController) Login() {
+	fmt.Println("###/login")
+	var para struct {
+		Name     string `json:"name"`
+		Password string `json:"password"`
+	}
+	err := json.Unmarshal(lc.Ctx.Input.RequestBody, &para)
+	if err != nil {
+		panic(err)
+	}
+	if para.Name == "admin" {
+		responseJson(lc.Ctx, `{status: 1,message: '登录成功'}`)
 		return
 	}
-	tk, ok := lc.GetSecureCookie(string(macKey), "tk")
-	if ok && tk == models.ManagerSingleCase.Token() {
-		lc.Redirect("/admin/profile", 302)
-	}
-	t := time.Now().Format(time.ANSIC)
-	//age, domain, security, httpOnly
-	lc.SetSecureCookie(string(macKey), "tk", "painterBlog"+t,
-		/*-1, "/", nil, true*/)
-	lc.Redirect("/admin/profile",302)
+	responseJson(lc.Ctx, `{status: 0,message: '账号或者密码错误'}`)
+	return
 }
 
 func CheckToken(ctx *context.Context) bool {
-	if ctx.Request.URL.Path == "/admin/login"{
+	if ctx.Request.URL.Path == "/admin/login" {
 		return true
 	}
 	return checkToken(ctx)
 }
 
-func checkToken(ctx *context.Context) bool  {
+func checkToken(ctx *context.Context) bool {
 	tk, ok := ctx.GetSecureCookie(string(macKey), "tk")
 	if !ok {
 		fmt.Println("@@@1")
@@ -79,8 +61,8 @@ func checkToken(ctx *context.Context) bool  {
 		fmt.Println("@@@2")
 		return false
 	}
-	if t, err := time.Parse(time.ANSIC,tk[11:]); err != nil {
-		fmt.Println("@@@3",tk,err)
+	if t, err := time.Parse(time.ANSIC, tk[11:]); err != nil {
+		fmt.Println("@@@3", tk, err)
 		return false
 	} else {
 		if time.Now().Sub(t) > time.Hour {
@@ -88,10 +70,10 @@ func checkToken(ctx *context.Context) bool  {
 			return false
 		}
 	}
-	err := models.ManagerSingleCase.NewUpdate().
-		Update("lastTime",time.Now()).EndUpdate()
-	if err != nil {
-		logs.Error("更新登陆时间失败："+err.Error())
-	}
+	//err := models.ManagerSingleCase.NewUpdate().
+	//	Update("lastTime",time.Now()).EndUpdate()
+	//if err != nil {
+	//	logs.Error("更新登陆时间失败："+err.Error())
+	//}
 	return true
 }

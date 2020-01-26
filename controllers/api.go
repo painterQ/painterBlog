@@ -4,11 +4,8 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/validation"
-	"github.com/painterQ/painterBlog/models"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -81,15 +78,7 @@ func (a *APIController) ApiAccount() {
 		responseNotice(a.Ctx, NOTICE_NOTICE, "参数错误", "","/admin/profile")
 		return
 	}
-	err := models.ManagerSingleCase.NewUpdate().
-		Update("email",email).
-		Update("phoneNumber",phoneNumber).
-		Update("address",address).EndUpdate()
-	if err != nil{
-		fmt.Println(err)
-		responseNotice(a.Ctx, NOTICE_ERROR, "持久化错误", "","/admin/profile")
-		return
-	}
+
 	responseNotice(a.Ctx, NOTICE_SUCCESS, "更新成功", "","/admin/profile")
 }
 
@@ -116,18 +105,7 @@ func (a *APIController) ApiBlog() {
 		responseNotice(a.Ctx, NOTICE_NOTICE, "参数错误", "","/admin/profile")
 		return
 	}
-	err := models.BlogSingleCase.NewUpdate().
-		Update("blogName",bn).
-		Update("bTitle",bt).
-		Update("beiAn",ba).
-		Update( "subTitle",st).
-		Update("seriesSay",ss).
-		Update("archivesSay",as).EndUpdate()
-	if err != nil{
-		fmt.Println(err)
-		responseNotice(a.Ctx, NOTICE_ERROR, "持久化错误", "","/admin/profile")
-		return
-	}
+
 	responseNotice(a.Ctx, NOTICE_SUCCESS, "更新成功", "","/admin/profile")
 }
 
@@ -147,14 +125,14 @@ func (a *APIController) ApiPostDelete() {
 // @router /post-add [post]
 func (a *APIController) ApiPostAdd() {
 	do := a.Input().Get("do") // auto or save or publish
-	slug := a.Input().Get("slug")
+	//slug := a.Input().Get("slug")
 	title := a.Input().Get("title")
-	text := a.Input().Get("text")
-	date := a.Input().Get("date")
+	//text := a.Input().Get("text")
+	//date := a.Input().Get("date")
 	serie := a.Input().Get("serie")
 	//tag := a.Input().Get("tags")
 	//update := a.Input().Get("update")
-	cidStr := a.Input().Get("cid")
+	//cidStr := a.Input().Get("cid")
 	var err error
 	defer func() {
 		switch do {
@@ -190,31 +168,7 @@ func (a *APIController) ApiPostAdd() {
 		return
 	}
 
-	artc := &models.Article{
-		ID : time.Now().Unix(),
-		Title:      title,
-		Content:    text,
-		Slug:       slug,
-		IsDraft:    do != "publish",
-		Author:     models.ManagerSingleCase.Username(),
-		//todo tags
-		SerieID:    0,
-		Tags:       []string{"壹","贰"},
-		CreateTime: CheckDate(date),
-		UpdateTime: time.Now(),
-		DeleteTime: time.Time{},
-	}
 
-	cid,err := strconv.ParseInt(cidStr,10,64)
-	if cid < 1 || err != nil{  //旧文章
-
-	}else {	//新文章
-
-	}
-	err = models.Save(artc)
-	if err != nil{
-		logs.Error("save art err:"+err.Error())
-	}
 	//todo 哪里重定向到manage-post的？
 }
 

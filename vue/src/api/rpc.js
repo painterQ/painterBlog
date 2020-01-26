@@ -32,8 +32,10 @@ function getDoc(info) {
     return util.get("/doc", info)
 }
 
+//发表文章
 function postDoc(info){
-    return util.post("/doc", info)
+    //info: "{"title":"first","path":"first","document":"<p>第一篇文章</p>\n<p>&nbsp;</p>"}"}
+    return util.post("/docs/doc", info)
 }
 
 //导出 default的含义

@@ -8,6 +8,6 @@ import (
 //go:generate  go generate ./vue
 func main() {
 	beego.DelStaticPath("static")
-	beego.SetStaticPath("/", "./static")
+	beego.SetStaticPath("/static", "./static")
 	beego.Run()
 }
