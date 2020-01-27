@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -54,11 +55,10 @@ func TestPush(t *testing.T) {
 		SubTitle:   "blog",
 		Tags:       []string{"blog","doc"},
 		Attr:       1,
-		CreateTime: time.Now().Add(- time.Hour),
 		LastTime:   time.Now(),
-		Abstract:   []byte("<p>first abstract, a doc for golang slice</p>"),
+		Abstract:  "<p>first abstract, a doc for golang slice</p>",
 	}
-	err := impl.Push([]byte("/doc/doc/1"),[]byte("<content>/doc/doc/1</content>"),mate)
+	err := impl.Push([]byte("<content>/doc/doc/1</content>"),mate)
 	assert.Nil(t, err)
 	mate = &DocumentMate{
 		ID:         "/doc/doc/2",
@@ -66,11 +66,10 @@ func TestPush(t *testing.T) {
 		SubTitle:   "blog",
 		Tags:       []string{"blog","document"},
 		Attr:       0,
-		CreateTime: time.Now().Add(- time.Hour),
 		LastTime:   time.Now(),
-		Abstract:   []byte("<p>second abstract, a document for golang map</p>"),
+		Abstract:   "<p>second abstract, a document for golang map</p>",
 	}
-	err = impl.Push([]byte("/doc/doc/2"),[]byte("<content>/doc/doc/2</content>"),mate)
+	err = impl.Push([]byte("<content>/doc/doc/2</content>"),mate)
 	assert.Nil(t, err)
 	diff := impl.GetDocumentByTag([]string{"blog"})
 	assert.Equal(t,2, len(diff))
@@ -88,10 +87,7 @@ func TestPush(t *testing.T) {
 	diff = impl.GetDocumentByTag([]string{"document", "doc"})
 	assert.Equal(t,0, len(diff))
 
-	err = impl.Push([]byte("/doc/doc/3"),[]byte("<content>/doc/doc/3</content>"),new(DocumentMate))
-	assert.NotNil(t, err)
-
-	err = impl.Push([]byte("/doc/doc|/3"),[]byte("<content>/doc/doc/3</content>"),&DocumentMate{
+	err = impl.Push([]byte("<content>/doc/doc/3</content>"),&DocumentMate{
 		ID:"/doc/doc|/3",
 	})
 	assert.NotNil(t, err)
@@ -104,11 +100,10 @@ func TestGetDocument(t *testing.T) {
 		SubTitle:   "blog",
 		Tags:       []string{"blog","doc"},
 		Attr:       1,
-		CreateTime: time.Now().Add(- time.Hour),
 		LastTime:   time.Now(),
-		Abstract:   []byte("<p>first abstract, a doc for golang slice</p>"),
+		Abstract:   "<p>first abstract, a doc for golang slice</p>",
 	}
-	err := impl.Push([]byte("/doc/doc/1"),[]byte("<content>/doc/doc/1</content>"),mate)
+	err := impl.Push([]byte("<content>/doc/doc/1</content>"),mate)
 	assert.Nil(t, err)
 	c,err := impl.GetDocument([]byte("/doc/doc/1"))
 	assert.Nil(t, err)
@@ -127,11 +122,10 @@ func TestGetDocument(t *testing.T) {
 		SubTitle:   "blog",
 		Tags:       []string{"blog","document"},
 		Attr:       0,
-		CreateTime: time.Now().Add(- time.Hour),
 		LastTime:   time.Now(),
-		Abstract:   []byte("<p>second abstract, a document for golang map</p>"),
+		Abstract:   "<p>second abstract, a document for golang map</p>",
 	}
-	err = impl.Push([]byte("/doc/doc/2"),[]byte("<content>/doc/doc/2</content>"),mate)
+	err = impl.Push([]byte("<content>/doc/doc/2</content>"),mate)
 	target = make([]*DocumentMate, 2)
 	js,err =impl.GetMate([]byte("/doc/doc/1"),2)
 	assert.Nil(t,err)
@@ -146,4 +140,18 @@ func TestOpenAgain(t *testing.T) {
 	err := impl2.Init(path,nil)
 	assert.Nil(t, err)
 	impl2.Close()
+}
+
+func TestGetTag(t *testing.T) {
+	for i:= 0;i< 10;i++{
+		tmp := make([]byte,20)
+		_,_ = rand.Read(tmp)
+		err := impl.AddTag([]string{hex.EncodeToString(tmp)})
+		assert.Nil(t, err)
+	}
+	g := impl.GetTag()
+	assert.Equal(t, 10, len(g))
+	for i:= 0;i <9;i++{
+		assert.True(t, strings.Compare( g[i],g[i+1]) < 0)
+	}
 }

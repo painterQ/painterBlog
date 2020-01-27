@@ -7,25 +7,17 @@ let listOut = ["/doc", "/doca", "/doca/suba", "/doca/subb",
     "/docd", "/doce", "/docf", "/docg", "/doch", "/doci"]
 
 //获取文章元信息
-Mock.mock('/docs', 'post', (options) => {
-    console.log("api 获取文章元信息", options.url, options.body);
-    let data = JSON.parse(options.body);
-    let length = data.length;
-    let start = data.start;
+Mock.mock(/\/docs$/, 'post', () => {
+    //todo 忽略入参，总是返回全部
+    // let data = JSON.parse(options.body);
+    // let length = data.length;
+    // let start = data.start;
     let list = JSON.parse(JSON.stringify(listOut))
 
-    let ids = []
+    let ids = [];
     let firstPref = "";
     let endNext = ""
     for (let k = 0 ;k< list.length;k++) {
-        if (start === list[k]) {
-            firstPref = k === 0 ? '/doc' : list[k - 1]
-        }
-        if (firstPref === "") continue;
-        if (length-- === 0) {
-            endNext = k < list.length ? list[k + 1] : list[k]
-            break
-        }
         ids.push({id:list[k],index:k})
     }
     
@@ -39,16 +31,6 @@ Mock.mock('/docs', 'post', (options) => {
             tmp = JSON.parse(JSON.stringify(docsList[1]))
         }
         tmp.id = ids[i].id
-        if (i === 0) {
-            tmp.pref = firstPref
-            tmp.next = ids[i + 1].id
-        } else if (i !== ids.length - 1) {
-            tmp.pref = ids[i - 1].id;
-            tmp.next = ids[i + 1].id
-        } else {
-            tmp.pref = ids[i - 1].id;
-            tmp.next = endNext
-        }
         tmp.index = ids[i].index
         ret.push(tmp)
     }
@@ -106,7 +88,16 @@ let docsList = [
     },
 ];
 
-// ???确定没有可以删除
-// Mock.mock(/doc\/number_range.*/,'get',(opt)=>{
-//     console.log("mock GET /doc/number_range",opt.url)
-// })
+
+let tags = ["tag1","tag2","tag3","tag4","tag5","tag6"];
+
+//GetTags 获取全部tag
+//method: GET
+//path /docs/tag
+//para: nil
+//return: ["tag1","tag2","tag3"]
+// @router /tag [get]
+Mock.mock("/docs/tag", 'get', () => {
+    console.log("api mock, 获取全部tag")
+    return tags
+});

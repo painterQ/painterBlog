@@ -2,12 +2,17 @@
     <div>
         <index-header></index-header>
         <router-view class="index-layout-main"></router-view>
+        <el-backtop><i class="el-icon-caret-top"
+                        style="color: orangered"></i></el-backtop>
     </div>
 </template>
 
 <script>
     import indexHeader from "@/components/indexHeader";
+    import {Backtop} from "element-ui"
+    import Vue from "vue"
 
+    Vue.use(Backtop)
     export default {
         name: 'layout',
         components: {
@@ -21,9 +26,6 @@
                 asideSwitch: false,
             }
         },
-
-        //learn: 计算属性
-        computed: {},
     }
 </script>
 

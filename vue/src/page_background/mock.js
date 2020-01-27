@@ -58,3 +58,32 @@ Mock.mock('/docs/doc', 'post', (options) => {
     console.log('options:', options);
     return {ok:true};
 });
+
+
+let tags = ["tag1","tag2","tag3","tag4","tag5","tag6"];
+
+//GetTags 获取全部tag
+//method: GET
+//path /docs/tag
+//para: nil
+//return: ["tag1","tag2","tag3"]
+// @router /tag [get]
+Mock.mock("/docs/tag", 'get', () => {
+    console.log("api mock, 获取全部tag")
+    return tags
+});
+
+//AddTag 新增tag
+//method: Post
+//path /docs/tag
+//data: ["tag1","tag2","tag3"]
+//return: nil
+// @router /tag [post]
+Mock.mock("/docs/tag", 'post', (req)=>{
+    console.log("api mock, 新增tag",req)
+    let r = JSON.parse(req.body);
+    if(r instanceof Array && r.length >0){
+        tags.concat(r)
+        tags = [...new Set(tags)]
+    }
+});

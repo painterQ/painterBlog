@@ -6,6 +6,10 @@ import (
 )
 
 func responseJson(ctx *context.Context, obj interface{}) {
+	if obj == nil{
+		_, _ =ctx.ResponseWriter.Write([]byte{})
+		return
+	}
 	if a, ok := obj.(string); ok {
 		_, _ = ctx.ResponseWriter.Write([]byte(a))
 		return
@@ -18,7 +22,7 @@ func responseJson(ctx *context.Context, obj interface{}) {
 
 	if a, ok := obj.(error); ok && a != nil {
 		_, _ = ctx.ResponseWriter.Write([]byte(a.Error()))
-		ctx.Abort(501, a.Error())
+		ctx.Abort(504, a.Error())
 		return
 	}
 	byteArray, err := json.Marshal(obj)

@@ -58,19 +58,21 @@
             prevDoc(){
                 //仍然在当前组件，所以只是复用，没有重新触发mounted
                 let current = this.$route.path.substr(4);
-                let pref = this.$store.state.docs.docSet[current].pref()
+                let pref = this.$store.state.docs.prev(current);
+                if (pref === current) return;
                 this.$router.push("/doc" + pref);
             },
             nextDoc(){
-                let current = this.$route.path.substr(4)
-                let next = this.$store.state.docs.docSet[current].next()
+                let current = this.$route.path.substr(4);
+                let next = this.$store.state.docs.next(current);
+                if (next === current) return;
                 this.$router.push("/doc" + next);
             },
             render(path) {
                 if(!/^\/doc\/.*/.test(path)){
                     return
                 }
-                path = path.substr(4)
+                path = path.substr(4);
                 console.log('change docs', "id:" + path);
                 this.$store.state.docs.get(path).then(
                     (data)=>{

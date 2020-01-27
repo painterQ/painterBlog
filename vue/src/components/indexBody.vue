@@ -15,14 +15,16 @@
                         <span>{{arts.title}}</span>
                     </h2>
                     <p>{{arts.abstract}}</p>
-                    <div>Post by 乔沛杨 on {{arts.time}}</div>
+                    <div>Post by {{arts.author}} on {{arts.time}}</div>
                     <hr/>
                 </div>
                 <el-pagination
                         background
                         layout="prev, pager, next"
-                        :current-page="this.currentPage"
-                        @current-change="this.pageChange"
+                        :hide-on-single-page="true"
+                        :page-size="pageSize"
+                        :current-page.sync="currentPage"
+                        @current-change="pageChange"
                         :total=this.totalNum>
                 </el-pagination>
             </div>
@@ -47,9 +49,8 @@
         data() {
             return {
                 //pagination
-                currentPage: 0,
-                //[currentPage * pageSize, (currentPage + 1) * pageSize)
-                pageSize: 10,
+                currentPage: 1,
+                pageSize: 5,
 
             }
         },
@@ -57,27 +58,31 @@
             totalNum() {
                 return this.$store.state.total
             },
-            //[currentPage * pageSize, (currentPage + 1) * pageSize)
+
             docList() {
-                console.log(this.$store.state.docsUpdate)
+                console.log(this.$store.state.docsUpdate)//强制依赖
                 this.$store.commit("setDocListUpdateState", false)
                 let output = [];
                 for (let e of this.$store.state.docs){
                     output.push(e)
                 }
-                return output
+                //分页逻辑 [(currentPage -1) * pageSize, currentPage * pageSize)
+                return output.slice((this.currentPage -1) * this.pageSize,
+                    this.currentPage * this.pageSize)
             }
         },
         methods: {
             selectDoc(artID) {
-                console.log("selectdoc", artID)
                 this.$router.push('/doc' + artID)
             },
             //pagination
             pageChange() {
-                console.log("pageChange")
+                //回到顶部
             },
         },
+        mounted() {
+            this.$store.state.docs.updateList('/doca',10)
+        }
     }
 </script>
 

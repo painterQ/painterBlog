@@ -95,6 +95,7 @@ func (ddb *DocumentLevelDB) getSize() {
 		Start: matePreFix,
 		Limit: tagPreFix,
 	}, nil)
+	defer iter.Release()
 	ddb.docTotal = -1
 	for iter.Next() {
 		ddb.docTotal++
@@ -116,6 +117,7 @@ func (ddb *DocumentLevelDB) GetMate(key []byte, length int) ([]byte, error) {
 		Start: append(matePreFix, key...),
 		Limit: tagPreFix,
 	}, nil)
+	defer iter.Release()
 	buf := make([][]byte, length)
 
 	var i int
@@ -124,7 +126,7 @@ func (ddb *DocumentLevelDB) GetMate(key []byte, length int) ([]byte, error) {
 		buf[i] = make([]byte, len(tmp))
 		copy(buf[i], tmp)
 	}
-	defer iter.Release()
+
 	err := iter.Error()
 	if err != nil {
 		logs.Error("GetMate error %v", err.Error())
@@ -191,13 +193,11 @@ func (ddb *DocumentLevelDB) GetDocumentByTag(tag []string) []string {
 //相同的key会覆盖
 //自动维护  calibration
 //使用事务
-func (ddb *DocumentLevelDB) Push(key, content []byte, mate *DocumentMate) (err error) {
-	if string(key) != mate.ID {
-		return errors.New("para mot match")
-	}
+func (ddb *DocumentLevelDB) Push(content []byte, mate *DocumentMate) (err error) {
 	if strings.Contains(mate.ID, "|") {
 		return errors.New("paras error")
 	}
+	key := []byte(mate.ID)
 
 	mateByte, _ := mate.Encode()
 	tx, err := ddb.db.OpenTransaction()
@@ -211,7 +211,13 @@ func (ddb *DocumentLevelDB) Push(key, content []byte, mate *DocumentMate) (err e
 	}()
 
 	err = tx.Put(addDocPrefix(key), content, nil)
+	if err != nil{
+		return
+	}
 	err = tx.Put(addMatePrefix(key), mateByte, nil)
+	if err != nil{
+		return
+	}
 
 	for i := range mate.Tags {
 		tagKey := addTagPrefix([]byte(mate.Tags[i]))
@@ -235,6 +241,43 @@ func (ddb *DocumentLevelDB) Push(key, content []byte, mate *DocumentMate) (err e
 
 	}
 	return
+}
+
+func (ddb *DocumentLevelDB)AddTag(t []string)  error{
+	batch := new(leveldb.Batch)
+	for i:= range t{
+		tag := []byte(t[i])
+		if len(tag) == 0{
+			continue
+		}
+		batch.Put(addTagPrefix(tag), tag)
+	}
+	return ddb.db.Write(batch, nil)
+}
+
+func (ddb *DocumentLevelDB) GetTag()[]string{
+	ret := make([]string, 0, 10)
+	iter := ddb.db.NewIterator(&util.Range{
+		Start: tagPreFix,
+		Limit: nil,
+	},nil)
+	defer iter.Release()
+	i := 0
+	iter.Next()
+	for iter.Next(){
+		tmpSplit := bytes.Split(iter.Key(),[]byte("::"))
+		if len(tmpSplit) < 2{
+			continue
+		}
+		ret = append(ret,string(tmpSplit[1]))
+		i++
+		if i== len(ret){
+			tmp := make([]string, len(ret), len(ret) * 2)
+			copy(tmp, ret)
+			ret = tmp
+		}
+	}
+	return ret
 }
 
 func addMatePrefix(key []byte) []byte {

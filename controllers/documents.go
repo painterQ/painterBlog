@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/painterQ/painterBlog/models"
+	"regexp"
 	"time"
 )
 
@@ -29,6 +30,7 @@ func (d *DocumentsController) URLMapping() {
 	d.Mapping("GetDocument", d.GetDocument)
 	d.Mapping("PostDocsList", d.PostDocsList)
 	d.Mapping("GetDocumentsIDByTags", d.GetDocumentsIDByTags)
+	d.Mapping("GetTags",d.GetTags)
 }
 
 //GetDocument 获取文章内容
@@ -40,10 +42,10 @@ func (d *DocumentsController) URLMapping() {
 func (d *DocumentsController) GetDocument() {
 	id := d.Input().Get("doc")
 	if id == "" {
-		responseJson(d.Ctx,errors.New("para doc error"))
+		responseJson(d.Ctx, errors.New("para doc error"))
 	}
 	c, err := dbImpl.GetDocument([]byte(id))
-	responseJson(d.Ctx,err)
+	responseJson(d.Ctx, err)
 	_, _ = d.Ctx.ResponseWriter.Write(c)
 }
 
@@ -88,32 +90,66 @@ func (d *DocumentsController) GetDocumentsIDByTags() {
 func (d *DocumentsController) PostNewDocument() {
 	fmt.Println("###PostNewDocument")
 	var para struct {
-		Tital    string `json:"title"`
-		Path     string `json:"path"`
-		Document string `json:"document"`
+		Title    string   `json:"title"`
+		Path     string   `json:"path"`
+		Abstract string   `json:"abstract"`
+		Tag      []string `json:"tag"`
+		Document string   `json:"document"`
 	}
 	err := json.Unmarshal(d.Ctx.Input.RequestBody, &para)
 	if err != nil {
 		panic(err)
 	}
 	content := []byte(para.Document)
-	path := []byte(para.Path)
-	abs := para.Document
-	if len(abs) > 20 {
-		abs = abs[:20] + "..."
+	abs := para.Abstract
+	if len(abs) == 0 {
+		abs = getAbstract(para.Document)
 	}
-	err = dbImpl.Push(path, content, &models.DocumentMate{
+	err = dbImpl.Push(content, &models.DocumentMate{
 		ID:       para.Path,
-		Title:    para.Tital,
+		Title:    para.Title,
 		SubTitle: "blog",
-		Tags:     []string{"blog", "document"},
+		Tags:     para.Tag,
 		LastTime: time.Now(),
+		Attr: 0,
 		Abstract: abs,
 	})
 	if err != nil {
 		panic(err)
 	}
 	_, _ = d.Ctx.ResponseWriter.Write([]byte("{ok:true}"))
+}
+
+var r,_ = regexp.Compile(`<p>.+<\\p>`)
+func getAbstract(s string) string {
+	return r.FindString(s)
+}
+
+//GetTags 获取全部tag
+//method: GET
+//path /docs/tag
+//para: nil
+//return: ["tag1","tag2","tag3"]
+// @router /tag [get]
+func (d *DocumentsController) GetTags() {
+	//todo 403缓存
+	responseJson(d.Ctx, dbImpl.GetTag())
+}
+
+//AddTag 新增tag
+//method: Post
+//path /docs/tag
+//data: ["tag1","tag2","tag3"]
+//return: nil
+// @router /tag [post]
+func (d *DocumentsController) AddTag() {
+	tag := make([]string, 10)
+	err := json.Unmarshal(d.Ctx.Input.RequestBody,&tag)
+	if err!= nil{
+		responseJson(d.Ctx, err)
+		return
+	}
+	responseJson(d.Ctx, dbImpl.AddTag(tag))
 }
 
 //------------------tool------------------

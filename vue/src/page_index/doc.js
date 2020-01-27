@@ -6,8 +6,6 @@ class Doc {
     attr = "";
     time = null;
     abstract = "";
-    nextDoc = "";
-    prefDoc = "";
 
     constructor(init = {}){
         this.id = init.id;
@@ -17,15 +15,6 @@ class Doc {
         this.attr = init.attr;
         this.time = init.time;
         this.abstract = init.abstract;
-        this.nextDoc = init.next;
-        this.prefDoc = init.pref;
-    }
-
-    next(){
-        return this.nextDoc
-    }
-    pref(){
-        return this.prefDoc
     }
 }
 

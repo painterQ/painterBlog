@@ -2,42 +2,36 @@ import api from '../api/rpc'
 import store from "./store";
 import Doc from "./doc";
 class DocListClass {
-    docSet = {};
-    cache = {};
+    docSet = {}; //文章元信息
+    cache = {};  //文章内容的缓存
 
     constructor(set = []) {
         for (let index in set){
             this.docSet[set[index].id] = new Doc(set[index])
         }
-        this.updateList('/doca',10)
     }
 
+    //设置缓存
     set(k, doc) {
         if (typeof doc === "string") {
-            console.log("set", k, doc)
             this.cache[k] = doc
         }
     }
-    findDocByKey(key){
-        for(let k in this.docSet){
-            if(k === key && this.docSet[k]){
-                return this.docSet[k]
-            }
-        }
-        return null
+    //获取文章元信息
+    getDocMate(key){
+        return this.docSet[key]
     }
 
+    //获取文章内容，使用了缓存
     async get(k) {
-        console.log("###get doc",k)
         if (this.cache[k] && this.cache[k].length > 0) {
             console.log("get doc cache")
             return this.cache[k];
         }
-        if (this.findDocByKey(k) === null){
-            console.log("not in list, updateList",k,10)
+        if (this.getDocMate(k) == null){
             await this.updateList(k,10)
         }
-        if (this.findDocByKey(k) === null){
+        if (this.getDocMate(k) == null){
             console.log("not in list too, 404")
             return null
         }
@@ -61,10 +55,10 @@ class DocListClass {
         }
     }
 
-    //构造函数被调用
+    //更新元信息
+    //初始化时、查找文章内容发现没有改文章时、点击目录时
     async updateList(start='',length=10) {
-        if (start === '') return;
-        api.getDocsList({start:start,length: length}).then(
+        await api.getDocsList({start:start,length: length}).then(
             data =>{
                 let set = data.data.list
                 for (let index in set){
@@ -75,6 +69,46 @@ class DocListClass {
                 store.commit('setDocListUpdateState',set.length > 0); //更新DocList
             }
         ).catch(err=>{console.log("getDocsList,err:",err)});
+    }
+
+    next(key){
+        if (typeof key !== "string" || key===""){
+            return key
+        }
+        let flag = 0;
+        for (let e of this){
+            if (flag === 1){
+                return e.id
+            }
+            if(e.id === key) {
+                flag = 1
+            }
+        }
+        return key
+    }
+
+    prev(key){
+        if (typeof key !== "string" || key===""){
+            return key
+        }
+        let arr = [];
+        let i = 0;
+        let flag = 0;
+        for (let e of this){
+            arr.push(e)
+            if (e.id === key){
+                flag =1
+                break
+            }
+            i++
+        }
+        if(flag === 1){
+            if (i === 0){
+                return arr[0].id
+            }
+            return arr[i - 1].id
+        }
+        return key
     }
 
     [Symbol.iterator]() {

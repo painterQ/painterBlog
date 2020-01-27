@@ -42,6 +42,29 @@ function postDoc(info){
     return util.post("/docs/doc", info)
 }
 
+//GetTags 获取全部tag
+//method: GET
+//path /docs/tag
+//para: nil
+//return: ["tag1","tag2","tag3"]
+// @router /tag [get]
+function getTags(){
+    console.log("api, 获取全部tag")
+    return util.get("/docs/tag")
+}
+
+
+//AddTag 新增tag
+//method: Post
+//path /docs/tag
+//data: ["tag1","tag2","tag3"]
+//return: nil
+// @router /tag [post]
+function addTag(info){
+    console.log("api, 新增tag")
+    return util.post("/docs/tag", info)
+}
+
 //导出 default的含义
 export default {
     login,
@@ -51,4 +74,5 @@ export default {
     getDocsList,
     getDoc,
     uploadImage,
-    postDoc}
+    postDoc,
+    getTags,addTag}
