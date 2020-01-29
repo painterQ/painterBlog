@@ -187,7 +187,7 @@
                 }
             },
             avatarError() {
-                this.$refs['avatar'].src = `${this.baseUrl}/avatar.jpeg`
+                this.$refs['avatar'].src = `${this.baseUrl}/static/avatar.jpeg`
             },
             handleAvatarSuccess(res, file) {
                 this.imageUrl = URL.createObjectURL(file.raw);

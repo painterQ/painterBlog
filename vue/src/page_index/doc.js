@@ -6,14 +6,27 @@ class Doc {
     attr = "";
     time = null;
     abstract = "";
-
+    /*
+    * {
+      "id": "/second",
+      "title": "第二篇",
+      "subTitle": "blog",
+      "tags": [
+        "blog",
+        "second"
+      ],
+      "attr": 0,
+      "lastTime": 1580263731,
+      "abstract": "这是我的第二篇blog，希望从此没有bug。"
+    }
+    * */
     constructor(init = {}){
         this.id = init.id;
         this.title = init.title;
         this.subTitle = init.subTitle;
         this.tags = JSON.parse(JSON.stringify(init.tags));
         this.attr = init.attr;
-        this.time = init.time;
+        this.time = Number(init.lastTime) * 1000;
         this.abstract = init.abstract;
     }
 }

@@ -15,7 +15,8 @@
                         <span>{{arts.title}}</span>
                     </h2>
                     <p>{{arts.abstract}}</p>
-                    <div>Post by {{arts.author}} on {{arts.time}}</div>
+                    <painter-tag v-for="t of arts.tags" :key="t">{{t}}</painter-tag>
+                    <div>{{$store.state.headerTitle}} on {{new Date (arts.time) | moment}}</div>
                     <hr/>
                 </div>
                 <el-pagination
@@ -24,7 +25,7 @@
                         :hide-on-single-page="true"
                         :page-size="pageSize"
                         :current-page.sync="currentPage"
-                        @current-change="pageChange"
+                        @current-change="up2Top"
                         :total=this.totalNum>
                 </el-pagination>
             </div>
@@ -37,6 +38,7 @@
     import {Pagination} from "element-ui";
     import indexAside from "@/components/indexAside.vue";
     import Motto from "./motto";
+    import PainterTag from "./tag";
 
     Vue.use(Pagination);
 
@@ -44,7 +46,8 @@
         name: 'index-body',
         components: {
             indexAside,
-            Motto
+            Motto,
+            PainterTag
         },
         data() {
             return {
@@ -63,11 +66,11 @@
                 console.log(this.$store.state.docsUpdate)//强制依赖
                 this.$store.commit("setDocListUpdateState", false)
                 let output = [];
-                for (let e of this.$store.state.docs){
+                for (let e of this.$store.state.docs) {
                     output.push(e)
                 }
                 //分页逻辑 [(currentPage -1) * pageSize, currentPage * pageSize)
-                return output.slice((this.currentPage -1) * this.pageSize,
+                return output.slice((this.currentPage - 1) * this.pageSize,
                     this.currentPage * this.pageSize)
             }
         },
@@ -76,13 +79,28 @@
                 this.$router.push('/doc' + artID)
             },
             //pagination
-            pageChange() {
+            up2Top() {
                 //回到顶部
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
             },
+            setHeader(){
+                //title, subTitle, time, tags, name
+                this.$store.commit("setHeader",{
+                    title: this.$store.state.blogTitle,
+                    subTitle: this.$store.state.blogSubTitle,
+                    time : this.$store.state.authorLastLogin,
+                    tags: ["博客"],
+                    name: this.$store.state.authorName,
+                })
+            }
         },
+        //list是每次路由都重新创建，因此代码应该放在mounted，而不是beforeRouteUpdate
+        //doc是文章切换会复用，因此应该放在路由守卫
         mounted() {
-            this.$store.state.docs.updateList('/doca',10)
-        }
+            this.setHeader();
+            this.up2Top();
+        },
     }
 </script>
 

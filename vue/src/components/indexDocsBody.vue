@@ -83,6 +83,23 @@
                         this.document = data;
                     }
                 )
+            },
+            up2Top(){
+                //回到顶部
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+            },
+            //setDocHeader 该方法被调用两次，一次是mounted，负责创建时
+            //一次是组件内路由守卫中，负责文章切换的情况，这种情况组件是复用的
+            setDocHeader(){
+                let currentDoc = this.$store.state.docs.docSet[this.$route.path.substr(4)]
+                this.$store.commit("setHeader",{
+                    title: currentDoc.title,
+                    subTitle: currentDoc.subTitle,
+                    time : currentDoc.time,
+                    tags: JSON.parse(JSON.stringify(currentDoc.tags)),
+                    name: currentDoc.name,
+                })
             }
         },
         mounted() {
@@ -97,10 +114,18 @@
                 active: null
             });
             this.render(this.$route.path)
+            //设置header
+            //title, subTitle, time, tags, name
+            //todo bug 直接刷新的话，这时候的docSet还是空的，因此currentDoc是undefined
+            this.setDocHeader();
+            this.up2Top();
         },
         //组件内的路由守卫
         beforeRouteUpdate(to,from,next){
-            this.render(to.path)
+            this.render(to.path);
+            //更新header
+            this.setDocHeader();
+            this.up2Top();
             next();
         },
     }

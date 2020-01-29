@@ -18,4 +18,19 @@
         margin: 4em auto;
         box-sizing: border-box;
     }
+
+    #motto > p {
+        text-align: center;
+        font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+        color: #1a222f;
+    }
+
+    #motto span {
+        display: block;
+        margin: 0.5em 2em;
+        text-align: right;
+        font-family: 'Avenir', Helvetica, Arial, sans-serif;
+        font-style: italic;
+        font-size: 0.8em;
+    }
 </style>

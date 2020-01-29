@@ -1,7 +1,6 @@
 import util from './axios.config'
 
 function login(user) {
-    console.log("login")
     return util.post("/login",user)
 }
 
@@ -65,6 +64,23 @@ function addTag(info){
     return util.post("/docs/tag", info)
 }
 
+//GetAuthorInfo 获取作者信息（author）和博客信息（header）
+//method: get
+//path /login
+//data: nil
+//return: {title: "Painter Qiao",
+//          subTitle: "for dear & love",
+//          avatar: "./avatar.jpeg",
+//          lastLogin: 123213213,
+//          name: "Painter Qiao",
+//          say: "a blog for dear & love"}
+// @router / [get]
+function getAuthorInfo(){
+    console.log("api, 获取作者信息");
+    return util.get("/login",)
+}
+
+
 //导出 default的含义
 export default {
     login,
@@ -75,4 +91,5 @@ export default {
     getDoc,
     uploadImage,
     postDoc,
-    getTags,addTag}
+    getTags,addTag,
+    getAuthorInfo}

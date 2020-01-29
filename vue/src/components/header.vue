@@ -11,7 +11,7 @@
                     ref="avatar"
                     :size="40"
                     fit="contain"
-                    src="./avatar.jpeg"
+                    :src="avatar"
                     @error="avatarError"
             ></el-avatar>
         </div>
@@ -30,7 +30,8 @@
                     height: "60px",
                     width: "154px",
                     margin: "0 2em 0 2em"
-                }
+                },
+                avatar: "../avatar.jpeg"
             }
         },
         methods: {

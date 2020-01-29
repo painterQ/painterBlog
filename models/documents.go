@@ -2,30 +2,32 @@ package models
 
 import (
 	"encoding/json"
-	"time"
 )
 
 //DocumentDataBase document data base
 type DocumentDataBase interface {
-	Init(path string, hookAfterInitDB func() error) (err error)
+	Init(dbPath string, hookAfterInitDB func(dbPath string)) (err error)
 	Close()
 
 	GetDocument(key []byte) (content []byte, err error)
-	GetMate(key []byte, from, to int) ([]*DocumentMate, error)
-	GetDocumentByTag(tag ...string) [][]byte
+	GetMate(key []byte, length int) ([]byte, error)
+	GetDocumentByTag(tag []string) []string
 	//相同的key会覆盖
-	Push(key, content []byte, isDraft bool) error
+	Push(content []byte, mate *DocumentMate) (err error)
+	//tag
+	GetTag() []string
+	AddTag([]string) error
 }
 
 //DocumentMate mate of document
 type DocumentMate struct {
-	ID         string    `json:"id"`
-	Title      string    `json:"title"`
-	SubTitle   string    `json:"subTitle"`
-	Tags       []string  `json:"tags"`
-	Attr       int       `json:"attr"`
-	LastTime   time.Time `json:"lastTime"`
-	Abstract   string    `json:"abstract"`
+	ID       string   `json:"id"`
+	Title    string   `json:"title"`
+	SubTitle string   `json:"subTitle"`
+	Tags     []string `json:"tags"`
+	Attr     int      `json:"attr"`
+	LastTime int64    `json:"lastTime"`
+	Abstract string   `json:"abstract"`
 }
 
 //Encode encode

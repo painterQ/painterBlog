@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/painterQ/painterBlog/models"
+	"path"
 	"regexp"
 	"time"
 )
@@ -15,11 +16,18 @@ type DocumentsController struct {
 	beego.Controller
 }
 
-var dbImpl *models.DocumentLevelDB
+const defaultDBPath  = "/tmp/painter"
+const ConfigDBPath  = "db"
+const DocDBPath = "./doc"
+const AccessDBPath = "./access"
+
+var dbImpl models.DocumentDataBase
 
 func init() {
 	dbImpl = new(models.DocumentLevelDB)
-	err := dbImpl.Init("/tmp/12312313", nil)
+	dbPath := beego.AppConfig.DefaultString(ConfigDBPath, defaultDBPath)
+	dbPath = path.Join(dbPath,DocDBPath)
+	err := dbImpl.Init(dbPath, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -59,7 +67,6 @@ func (d *DocumentsController) GetDocument() {
 //		 ], total: 22}
 // @router / [post]
 func (d *DocumentsController) PostDocsList() {
-	fmt.Println("###GetDocsList")
 	var para struct {
 		Start  string `json:"start"`
 		Length int    `json:"length"`
@@ -110,7 +117,7 @@ func (d *DocumentsController) PostNewDocument() {
 		Title:    para.Title,
 		SubTitle: "blog",
 		Tags:     para.Tag,
-		LastTime: time.Now(),
+		LastTime: time.Now().Unix(),
 		Attr: 0,
 		Abstract: abs,
 	})

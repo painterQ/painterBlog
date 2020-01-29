@@ -60,12 +60,11 @@ class DocListClass {
     async updateList(start='',length=10) {
         await api.getDocsList({start:start,length: length}).then(
             data =>{
-                let set = data.data.list
-                for (let index in set){
-                    this.docSet[set[index].id] = new Doc(set[index])
+                let set = data.data.list;
+                for (let i in set){
+                    this.docSet[set[i].id] = new Doc(set[i]);
                 }
-                console.log("获取文章元信息，返回值",data.data)
-                store.commit("setTotalDocs",data.data.total) //更新总数
+                store.commit("setTotalDocs",data.data.total);//更新总数
                 store.commit('setDocListUpdateState',set.length > 0); //更新DocList
             }
         ).catch(err=>{console.log("getDocsList,err:",err)});
