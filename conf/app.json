@@ -1,0 +1,18 @@
+{
+    "normalConfig": {
+        "title": "painter q",
+        "subTitle": "a blog for dear \u0026 love",
+        "name": "乔沛杨",
+        "say": "a blog for dear \u0026 love",
+        "ipc": "浙江备案",
+        "github": "painterQ",
+        "avatar": "../avatar.jpeg",
+        "email": "painterqiao@gmail.com"
+    },
+    "pwd": {
+        "salt": "P2MrV4b8bIlMOURD2XWH_wFqoNHyPbPLFKljjoeYlcg=",
+        "key": "T9qM4lFijAaPod6z46TfajBiFaAQsNsEW3P8LVptU7g="
+    },
+    "lastLogin": 1580433256,
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiOjoxIiwiZXhwIjoxNTgwNjA2MDU2LjAxMjQzNCwibmJmIjoxNTgwNDMzMjU2LjAxMjQzNH0.6ZNqfkWvFG3mGWkGpQWcMWzcvmN_ld6Cy47y6bl6Z_w"
+}

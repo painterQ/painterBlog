@@ -3,10 +3,8 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/painterQ/painterBlog/models"
-	"path"
 	"regexp"
 	"time"
 )
@@ -16,29 +14,14 @@ type DocumentsController struct {
 	beego.Controller
 }
 
-const defaultDBPath  = "/tmp/painter"
-const ConfigDBPath  = "db"
-const DocDBPath = "./doc"
-const AccessDBPath = "./access"
-
-var dbImpl models.DocumentDataBase
-
-func init() {
-	dbImpl = new(models.DocumentLevelDB)
-	dbPath := beego.AppConfig.DefaultString(ConfigDBPath, defaultDBPath)
-	dbPath = path.Join(dbPath,DocDBPath)
-	err := dbImpl.Init(dbPath, nil)
-	if err != nil {
-		panic(err)
-	}
-}
-
 // URLMapping /docs
 func (d *DocumentsController) URLMapping() {
-	d.Mapping("GetDocument", d.GetDocument)
-	d.Mapping("PostDocsList", d.PostDocsList)
-	d.Mapping("GetDocumentsIDByTags", d.GetDocumentsIDByTags)
-	d.Mapping("GetTags",d.GetTags)
+	d.Mapping("GetDocument", d.GetDocument)                   //get 	/docs
+	d.Mapping("GetDocsList", d.GetDocsList)                   //post 	/docs
+	d.Mapping("GetDocumentsIDByTags", d.GetDocumentsIDByTags) //get 	/docs/tags
+	d.Mapping("PostNewDocument", d.PostNewDocument)           //post 	/docs/doc/filter	*
+	d.Mapping("AddTag", d.AddTag)                             //post 	/docs/tag/filter	*
+	d.Mapping("GetTags", d.GetTags)                           //get 	/docs/tag
 }
 
 //GetDocument 获取文章内容
@@ -52,7 +35,7 @@ func (d *DocumentsController) GetDocument() {
 	if id == "" {
 		responseJson(d.Ctx, errors.New("para doc error"))
 	}
-	c, err := dbImpl.GetDocument([]byte(id))
+	c, err := models.DocumentDataBaseSingleCase.GetDocument([]byte(id))
 	responseJson(d.Ctx, err)
 	_, _ = d.Ctx.ResponseWriter.Write(c)
 }
@@ -66,7 +49,7 @@ func (d *DocumentsController) GetDocument() {
 //				{"id":"first","title":"first","subTitle":"blog","tags":["blog","document"],"attr":0,"createTime":"0001-01-01T00:00:00Z","lastTime":"2020-01-26T15:35:30.653602+08:00","abstract":"PHA+Zmlyc3Q8L3A+"}
 //		 ], total: 22}
 // @router / [post]
-func (d *DocumentsController) PostDocsList() {
+func (d *DocumentsController) GetDocsList() {
 	var para struct {
 		Start  string `json:"start"`
 		Length int    `json:"length"`
@@ -75,7 +58,7 @@ func (d *DocumentsController) PostDocsList() {
 	if err != nil {
 		panic(err)
 	}
-	c, err := dbImpl.GetMate([]byte(para.Start), para.Length)
+	c, err := models.DocumentDataBaseSingleCase.GetMate([]byte(para.Start), para.Length)
 	if err != nil {
 		panic(err)
 	}
@@ -90,12 +73,11 @@ func (d *DocumentsController) GetDocumentsIDByTags() {
 
 //PostNewDocument 发表文章
 //method: POST
-//path /docs/doc
+//path /docs/doc/filter
 //data: "{"title":"first","path":"first","document":"<p>第一篇文章</p>\n<p>&nbsp;</p>"}"}
 //returm: 200 "{ok:true}"
-// @router /doc [post]
+// @router /doc/filter [post]
 func (d *DocumentsController) PostNewDocument() {
-	fmt.Println("###PostNewDocument")
 	var para struct {
 		Title    string   `json:"title"`
 		Path     string   `json:"path"`
@@ -105,29 +87,38 @@ func (d *DocumentsController) PostNewDocument() {
 	}
 	err := json.Unmarshal(d.Ctx.Input.RequestBody, &para)
 	if err != nil {
-		panic(err)
+		responseJson(d.Ctx, err)
+		return
 	}
+
+	if len(para.Title) == 0 || len(para.Path) == 0 || para.Path[0] != '/' {
+		responseJson(d.Ctx, errors.New("params have empty member"))
+		return
+	}
+
 	content := []byte(para.Document)
 	abs := para.Abstract
 	if len(abs) == 0 {
 		abs = getAbstract(para.Document)
 	}
-	err = dbImpl.Push(content, &models.DocumentMate{
+	err = models.DocumentDataBaseSingleCase.Push(content, &models.DocumentMate{
 		ID:       para.Path,
 		Title:    para.Title,
 		SubTitle: "blog",
 		Tags:     para.Tag,
 		LastTime: time.Now().Unix(),
-		Attr: 0,
+		Attr:     0,
 		Abstract: abs,
 	})
 	if err != nil {
-		panic(err)
+		responseJson(d.Ctx, err)
+		return
 	}
 	_, _ = d.Ctx.ResponseWriter.Write([]byte("{ok:true}"))
 }
 
-var r,_ = regexp.Compile(`<p>.+<\\p>`)
+var r, _ = regexp.Compile(`<p>.+<\\p>`)
+
 func getAbstract(s string) string {
 	return r.FindString(s)
 }
@@ -140,34 +131,21 @@ func getAbstract(s string) string {
 // @router /tag [get]
 func (d *DocumentsController) GetTags() {
 	//todo 403缓存
-	responseJson(d.Ctx, dbImpl.GetTag())
+	responseJson(d.Ctx, models.DocumentDataBaseSingleCase.GetTag())
 }
 
 //AddTag 新增tag
 //method: Post
-//path /docs/tag
+//path /docs/tag/filter
 //data: ["tag1","tag2","tag3"]
 //return: nil
-// @router /tag [post]
+// @router /tag/filter [post]
 func (d *DocumentsController) AddTag() {
 	tag := make([]string, 10)
-	err := json.Unmarshal(d.Ctx.Input.RequestBody,&tag)
-	if err!= nil{
+	err := json.Unmarshal(d.Ctx.Input.RequestBody, &tag)
+	if err != nil {
 		responseJson(d.Ctx, err)
 		return
 	}
-	responseJson(d.Ctx, dbImpl.AddTag(tag))
-}
-
-//------------------tool------------------
-func (d *DocumentsController) ErrResponse(code int, err error) {
-	if code == 401 {
-
-	}
-}
-
-func (d *DocumentsController) Cache() bool {
-	//d.Ctx.Request.Header.Get("If-Modified-Since")
-	//d.Ctx.Request.Header.Get()
-	return true
+	responseJson(d.Ctx, models.DocumentDataBaseSingleCase.AddTag(tag))
 }

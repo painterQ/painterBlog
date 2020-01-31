@@ -36,20 +36,59 @@
                 this.showBar = scroll <= this.lastScroll || scroll === 0;
                 this.lastScroll = scroll
             },
-            setHeader(){
+            setHeader() {
                 //title, subTitle, time, tags, name
-                this.$store.commit("setHeader",{
+                this.$store.commit("setHeader", {
                     title: this.$store.state.blogTitle,
                     subTitle: this.$store.state.blogSubTitle,
-                    time : this.$store.state.authorLastLogin,
+                    time: this.$store.state.authorLastLogin,
                     tags: ["博客"],
                     name: this.$store.state.authorName,
                 })
+            },
+            up2Top() {
+                //回到顶部
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+            },
+            updateHeader(newPath){
+                if (newPath.startsWith("/doc")) {
+                    let currentDoc = this.$store.state.docs.docSet[this.$route.path.substr(4)]
+                    this.$store.commit("setHeader",{
+                        title: currentDoc.title,
+                        subTitle: currentDoc.subTitle,
+                        time : currentDoc.time,
+                        tags: JSON.parse(JSON.stringify(currentDoc.tags)),
+                        name: currentDoc.name,
+                    })
+                } else if (newPath.startsWith("/list")) {
+                    this.$store.commit("setHeader",{
+                        title: this.$store.state.blogTitle,
+                        subTitle: this.$store.state.blogSubTitle,
+                        time : this.$store.state.authorLastLogin,
+                        tags: ["博客"],
+                        name: this.$store.state.authorName,
+                    })
+                }
             }
         },
-
+        watch: {
+            //如果没有immediate，避免了部分组件内路由，但是mounted还是不能省的，因为不会触发
+            '$route.fullPath': {
+                handler:function (newFlag, /*oldFlag*/) {
+                    this.up2Top();
+                    this.$store.state.docs.updateList('/doca', 10).then(
+                        ()=>{
+                            this.updateHeader(newFlag)
+                        }
+                    )
+                },
+                //立即触发，可以省略很多mounted，因为这里刷新也会触发了
+                //最佳实践就是，新建一个总会存在的components，然后在其中加route的watcher
+                immediate: true
+            }
+        },
         mounted() {
-            this.$store.state.docs.updateList('/doca', 10);
             window.addEventListener('scroll', this.menu, true);
             //获取作者信息
             api.getAuthorInfo().then(

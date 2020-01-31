@@ -19,9 +19,9 @@ const (
 	Top
 )
 
-const (
-	mateMaxNum = 20
-)
+//const (
+//	mateMaxNum = 20
+//)
 
 var (
 	docPreFix  = []byte("internal__doc::")  //0

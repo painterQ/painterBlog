@@ -2,7 +2,7 @@
     <div>
         <div class="index-body-all">
             <index-aside class="index-body-aside">
-                <motto style="margin: 10px 0"></motto>
+                <motto></motto>
             </index-aside>
             <div class="index-body-main">
                 <!--list-->
@@ -84,22 +84,6 @@
                 document.documentElement.scrollTop = 0;
                 document.body.scrollTop = 0;
             },
-            setHeader(){
-                //title, subTitle, time, tags, name
-                this.$store.commit("setHeader",{
-                    title: this.$store.state.blogTitle,
-                    subTitle: this.$store.state.blogSubTitle,
-                    time : this.$store.state.authorLastLogin,
-                    tags: ["博客"],
-                    name: this.$store.state.authorName,
-                })
-            }
-        },
-        //list是每次路由都重新创建，因此代码应该放在mounted，而不是beforeRouteUpdate
-        //doc是文章切换会复用，因此应该放在路由守卫
-        mounted() {
-            this.setHeader();
-            this.up2Top();
         },
     }
 </script>

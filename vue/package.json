@@ -16,6 +16,7 @@
     "mockjs": "^1.0.1-beta3",
     "tinymce": "^5.0.3",
     "vue": "^2.6.10",
+    "vue-cookies": "^1.6.1",
     "vue-router": "^3.1.3",
     "vuex": "^3.1.1"
   },

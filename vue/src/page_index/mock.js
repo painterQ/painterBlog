@@ -106,12 +106,15 @@ Mock.mock("/docs/tag", 'get', () => {
 //method: get
 //path /login
 //data: nil
-//return: {title: "Painter Qiao",
-//          subTitle: "for dear & love",
-//          avatar: "./avatar.jpeg",
-//          lastLogin: 123131321,
-//          name: "Painter Qiao",
-//          say: "a blog for dear & love"}
+//{tavatar: "../avatar.jpeg"
+// email: "painterqiao@gmail.com"
+// github: "123456"
+// ipc: "浙江备案"
+// lastLogin: 1580366728
+// name: "painter qiao"
+// say: "a blog for dear & love"
+// subTitle: "for dear & love"
+// title: "painter qiao"}
 // @router / [get]
 Mock.mock("/login", "get", () => {
     console.log("api mock, 获取作者信息")
@@ -121,6 +124,9 @@ Mock.mock("/login", "get", () => {
         avatar: "./avatar.jpeg",
         lastLogin: 0 + Number(new Date()),
         name: "Painter Qiao",
-        say: "a blog for dear & love"
+        say: "a blog for dear & love",
+        ipc:"备案号码",
+        github: "github address",
+        email: "your_email@gmail.com"
     }
 });

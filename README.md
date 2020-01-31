@@ -176,3 +176,5 @@ DocList初始化的时候也能指定一些init，但是现在是空的。
 因此初始状态，DocList是空的, docsUpdate = flase, total=0
 
 目前一开始获取全部的mate
+
+有些代码放到mounted，有些放到组件内路由，有些放到利己之心的watcher中

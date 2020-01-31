@@ -27,7 +27,7 @@ axios.interceptors.response.use(
             message: error.message,
             type: "error",
             duration: 5000,
-        })
+        });
         return Promise.resolve(error)
     }
 )

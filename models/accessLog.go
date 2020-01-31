@@ -3,6 +3,7 @@ package models
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
@@ -10,10 +11,24 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"net"
 	"os"
+	"path"
 	"sync"
 	"sync/atomic"
 	"time"
 )
+
+var AccessLogSingleCase AccessLog
+const AccessDBPath = "./access"
+
+func init() {
+	AccessLogSingleCase = new(AccessLogLevelDBImpl)
+	dbPath := beego.AppConfig.DefaultString(ConfigDBPath, defaultDBPath)
+	dbPath = path.Join(dbPath, AccessDBPath)
+	err := AccessLogSingleCase.Start(dbPath)
+	if err != nil {
+		panic(err)
+	}
+}
 
 type Access struct {
 	IP    net.IP

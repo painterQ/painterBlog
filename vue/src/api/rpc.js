@@ -8,16 +8,20 @@ function uploadImage(data) {
    return util.post('/doc/image',data)
 }
 
-function changeBaseInfo(info) {
-    return util.post("/info/base", info)
+//修改基础信息
+// {mail: "", github: "",}
+function changeBaseInfo(info, vue) {
+    return util.post("/login/base/filter", info)
 }
 
+// { name: "", title: "", subTitle: "", IPC: ""}
 function changeBlogInfo(info) {
-    return util.post("/info/blog", info)
+    return util.post("/login/blog/filter", info)
 }
 
+// {pwd: ""}
 function changePwdChange(info) {
-    return util.post("/info/pwd", info)
+    return util.post("/login/pwd/filter", info)
 }
 
 //获取文章元信息
@@ -38,7 +42,7 @@ function getDoc(info) {
 function postDoc(info){
     console.log("api, 创建新的文章")
     //info: "{"title":"first","path":"first","document":"<p>第一篇文章</p>\n<p>&nbsp;</p>"}"}
-    return util.post("/docs/doc", info)
+    return util.post("/docs/doc/filter", info)
 }
 
 //GetTags 获取全部tag
@@ -55,25 +59,28 @@ function getTags(){
 
 //AddTag 新增tag
 //method: Post
-//path /docs/tag
+//path /docs/tag/filter
 //data: ["tag1","tag2","tag3"]
 //return: nil
-// @router /tag [post]
+// @router /tag/filter [post]
 function addTag(info){
     console.log("api, 新增tag")
-    return util.post("/docs/tag", info)
+    return util.post("/docs/tag/filter", info)
 }
 
 //GetAuthorInfo 获取作者信息（author）和博客信息（header）
 //method: get
 //path /login
 //data: nil
-//return: {title: "Painter Qiao",
+//{title: "Painter Qiao",
 //          subTitle: "for dear & love",
 //          avatar: "./avatar.jpeg",
 //          lastLogin: 123213213,
 //          name: "Painter Qiao",
-//          say: "a blog for dear & love"}
+//			ipc: "",
+//			github: "",
+//          say: "a blog for dear & love"
+//          email: ""}
 // @router / [get]
 function getAuthorInfo(){
     console.log("api, 获取作者信息");

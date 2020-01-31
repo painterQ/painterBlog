@@ -10,22 +10,16 @@ const store = new Vuex.Store({
             asideSwitch: true,
         },
         login: false,
-        logInState:{
-            email: "",
-            lastLogin: [],  //最近10次的登录ip，时间
-            avatar: null, //image对象
-            baseInfoForm: {
-                mail: '',
-                github: '',
-            },
-            blogInfoForm: {
-                nickName: '',
-                title: '',
-                motto: '',
-                IPC: '',
-                beforeArchive: '',
-                beforeTopic: '',
-            },
+
+        author: {
+            avatar: '',
+            mail: '',
+            github: '',
+            name: '',
+            title: '',
+            subTitle: '',
+            motto: '',
+            IPC: '',
         }
     },
     // getters: {
@@ -40,8 +34,34 @@ const store = new Vuex.Store({
         changeAsideSwitch: state => {
             state.viewState.asideSwitch = !state.viewState.asideSwitch;
         },
-        changeLogin: state => {
-            state.login = state
+        changeLogin: (state, b) => {
+            state.login = b
+        },
+
+        //author
+        changeAvatar: (state, info) => {
+            state.author.avatar = info
+        },
+        changeMail: (state, info) => {
+            state.author.mail = info;
+        },
+        changeGithub: (state, info) => {
+            state.author.github = info;
+        },
+        changeName: (state, info) => {
+            state.author.name = info;
+        },
+        changeTitle: (state, info) => {
+            state.author.title = info;
+        },
+        changeSubTitle: (state, info) => {
+            state.author.subTitle = info;
+        },
+        changeMotto: (state, info) => {
+            state.author.motto = info;
+        },
+        changeIPC: (state, info) => {
+            state.author.IPC = info;
         }
     }
 });

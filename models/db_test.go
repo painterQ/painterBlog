@@ -55,7 +55,7 @@ func TestPush(t *testing.T) {
 		SubTitle:   "blog",
 		Tags:       []string{"blog","doc"},
 		Attr:       1,
-		LastTime:   time.Now(),
+		LastTime:   time.Now().Unix(),
 		Abstract:  "<p>first abstract, a doc for golang slice</p>",
 	}
 	err := impl.Push([]byte("<content>/doc/doc/1</content>"),mate)
@@ -66,7 +66,7 @@ func TestPush(t *testing.T) {
 		SubTitle:   "blog",
 		Tags:       []string{"blog","document"},
 		Attr:       0,
-		LastTime:   time.Now(),
+		LastTime:   time.Now().Unix(),
 		Abstract:   "<p>second abstract, a document for golang map</p>",
 	}
 	err = impl.Push([]byte("<content>/doc/doc/2</content>"),mate)
@@ -100,7 +100,7 @@ func TestGetDocument(t *testing.T) {
 		SubTitle:   "blog",
 		Tags:       []string{"blog","doc"},
 		Attr:       1,
-		LastTime:   time.Now(),
+		LastTime:   time.Now().Unix(),
 		Abstract:   "<p>first abstract, a doc for golang slice</p>",
 	}
 	err := impl.Push([]byte("<content>/doc/doc/1</content>"),mate)
@@ -122,7 +122,7 @@ func TestGetDocument(t *testing.T) {
 		SubTitle:   "blog",
 		Tags:       []string{"blog","document"},
 		Attr:       0,
-		LastTime:   time.Now(),
+		LastTime:   time.Now().Unix(),
 		Abstract:   "<p>second abstract, a document for golang map</p>",
 	}
 	err = impl.Push([]byte("<content>/doc/doc/2</content>"),mate)
