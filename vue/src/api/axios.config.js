@@ -1,6 +1,8 @@
 import axios from "axios"
 import {Message} from "element-ui"
 
+import constVar from './const'
+
 //  这个baseUrl要根据实际情况进行改变
 axios.defaults.baseURL = "/";
 axios.defaults.headers.common["Content-Type"] =
@@ -15,26 +17,28 @@ axios.interceptors.request.use(
     error => {
         return Promise.reject(error)
     }
-)
+);
 
-// 响应拦截器即异常处理
-axios.interceptors.response.use(
-    response => {
-        return response
-    },
-    error => {
-        Message({
-            message: error.message,
-            type: "error",
-            duration: 5000,
-        });
-        return Promise.resolve(error)
+function handleError(status,router, store, cookies) {
+    console.log("handleError");
+    switch (status) {
+        case 404:
+            if (!router) return
+            router.replace('/404');
+            break;
+        case 403:
+            if (!cookies||!store) return;
+            cookies.remove(constVar.cookieKey);
+            store.commit("changeLogin", false);
+            break;
+        default:
+            console.log("handleError",status)
     }
-)
+}
 
 export default {
     // get请求
-    get(url, param) {
+    get(url, param, {$router, $store, $cookies}) {
         return new Promise((resolve, reject) => {
             axios({
                 method: "get",
@@ -45,8 +49,9 @@ export default {
                     resolve(res)
                 })
                 .catch(error => {
+                    handleError(error.response.status,$router, $store, $cookies);
                     Message({
-                        message: error,
+                        message: error.message,
                         type: "error",
                         duration: 5000,
                     });
@@ -55,7 +60,7 @@ export default {
         })
     },
     // post请求
-    post(url, param) {
+    post(url, param, {$router, $store, $cookies}) {
         return new Promise((resolve, reject) => {
             axios({
                 method: "post",
@@ -66,19 +71,17 @@ export default {
                     resolve(res)
                 })
                 .catch(error => {
+                    handleError(error.response.status,$router, $store, $cookies);
                     Message({
-                        message: error,
+                        message: error.message,
                         type: "error",
                         duration: 5000,
-                    })
+                    });
                     reject(error)
                 })
         })
     },
-    // all get
-    allGet(fnArr) {
-        return axios.all(fnArr)
-    },
+
 }
 
 /*

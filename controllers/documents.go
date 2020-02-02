@@ -1,11 +1,14 @@
 package controllers
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/painterQ/painterBlog/models"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -22,6 +25,7 @@ func (d *DocumentsController) URLMapping() {
 	d.Mapping("PostNewDocument", d.PostNewDocument)           //post 	/docs/doc/filter	*
 	d.Mapping("AddTag", d.AddTag)                             //post 	/docs/tag/filter	*
 	d.Mapping("GetTags", d.GetTags)                           //get 	/docs/tag
+	d.Mapping("UploadImage", d.UploadImage)                   //post	/docs/image/filter 	*
 }
 
 //GetDocument 获取文章内容
@@ -148,4 +152,50 @@ func (d *DocumentsController) AddTag() {
 		return
 	}
 	responseJson(d.Ctx, models.DocumentDataBaseSingleCase.AddTag(tag))
+}
+
+//uploadImage 上传图片
+//method: Post
+//path /docs/image/filter
+//data: { img: img, type: blobInfo.blob.type }
+//return: {'url':"http://localhost:8080/public/img/background.0ed615ed.jpg"}
+// @router /image/filter [post]
+// dataURL 'data:image/jpeg;base64,'+base64
+func (d *DocumentsController) UploadImage() {
+	var para struct {
+		Type string `json:"type"` //image/png  image/jpeg   image/jpg
+		Img  string `json:"img"`  //base64
+		Name string `json:"name"`
+	}
+	err := json.Unmarshal(d.Ctx.Input.RequestBody, &para)
+	if err != nil {
+		responseJson(d.Ctx, err)
+		return
+	}
+	if len(para.Name) > 64 {
+		responseJson(d.Ctx, fmt.Errorf("file name is too long"))
+		return
+	}
+	if len(para.Img) > imageSizeLimit {
+		responseJson(d.Ctx, fmt.Errorf("file size bigger then %d bytes", imageSizeLimit/4*3))
+		return
+	}
+
+	imageData, err := base64.StdEncoding.DecodeString(para.Img)
+	if err != nil {
+		responseJson(d.Ctx, fmt.Errorf("parse error"))
+		return
+	}
+
+	tmp := strings.Split(para.Type, "/")
+	if len(tmp) != 2 {
+		responseJson(d.Ctx, fmt.Errorf("parse image type error"))
+		return
+	}
+	info,err := models.ImageStoreSingleCase.SaveImage(imageData, para.Name, tmp[1], nil)
+	if err != nil{
+		responseJson(d.Ctx, err)
+	}
+	url := strings.Join([]string{webDN,info.Src}, "/")
+	responseJson(d.Ctx, fmt.Sprintf(`{"url":"%s"}`, url))
 }

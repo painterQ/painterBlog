@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/comparer"
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -36,37 +37,46 @@ type DocumentLevelDB struct {
 	inited   int32
 }
 
+func openDB(path string, cmp comparer.Comparer, ErrorIfExist bool, flagOld *bool) *leveldb.DB {
+	if flagOld != nil {
+		*flagOld = false
+	}
+	db, err := leveldb.OpenFile(path, &opt.Options{
+		Comparer:     cmp,
+		ErrorIfExist: ErrorIfExist,
+	})
+	switch {
+	case errors.IsCorrupted(err):
+		logs.Error("database (%v) corrupted, process try to recover: %v", path, err.Error())
+		db, err = leveldb.RecoverFile(path, nil)
+		if err != nil {
+			logs.Error("try to recover fail: %v", path, err.Error())
+			return nil
+		}
+		if flagOld != nil {
+			*flagOld = true
+		}
+		return openDB(path, new(DocumentComparer), false, nil)
+	case err == os.ErrExist:
+		logs.Warn("database (%v) is exist, use old database", path)
+		if flagOld != nil {
+			*flagOld = true
+		}
+		return openDB(path, new(DocumentComparer), false, nil)
+	case err == nil:
+		return db
+	default:
+		logs.Error("opening database (%v) encountered unknown error: %v", path, err.Error())
+		return nil
+	}
+}
+
 func (ddb *DocumentLevelDB) Init(dbPath string, hookAfterInitDB func(dbPath string)) (err error) {
 	if !atomic.CompareAndSwapInt32(&ddb.inited, 0, 1) {
 		return errors.New("already init")
 	}
 	flagOld := false
-	openDB := func(path string) (newDB *leveldb.DB) {
-		db, err := leveldb.OpenFile(path, &opt.Options{
-			Comparer: new(DocumentComparer),
-		})
-		switch {
-		case errors.IsCorrupted(err):
-			logs.Error("database (%v) corrupted, process try to recover: %v", path, err.Error())
-			db, err = leveldb.RecoverFile(path, nil)
-			if err != nil {
-				logs.Error("try to recover fail: %v", path, err.Error())
-				return nil
-			}
-			return db
-		case err == os.ErrExist:
-			flagOld = true
-			logs.Warn("database (%v) is exist, use old database", path)
-			fallthrough
-		case err == nil:
-			return db
-		default:
-			logs.Error("opening database (%v) encountered unknown error: %v", path, err.Error())
-			return nil
-		}
-	}
-
-	documentDB := openDB(dbPath)
+	documentDB := openDB(dbPath, new(DocumentComparer), true, &flagOld)
 	if documentDB == nil {
 		return errors.New("init error")
 	}
@@ -211,11 +221,11 @@ func (ddb *DocumentLevelDB) Push(content []byte, mate *DocumentMate) (err error)
 	}()
 
 	err = tx.Put(addDocPrefix(key), content, nil)
-	if err != nil{
+	if err != nil {
 		return
 	}
 	err = tx.Put(addMatePrefix(key), mateByte, nil)
-	if err != nil{
+	if err != nil {
 		return
 	}
 
@@ -243,11 +253,11 @@ func (ddb *DocumentLevelDB) Push(content []byte, mate *DocumentMate) (err error)
 	return
 }
 
-func (ddb *DocumentLevelDB)AddTag(t []string)  error{
+func (ddb *DocumentLevelDB) AddTag(t []string) error {
 	batch := new(leveldb.Batch)
-	for i:= range t{
+	for i := range t {
 		tag := []byte(t[i])
-		if len(tag) == 0{
+		if len(tag) == 0 {
 			continue
 		}
 		batch.Put(addTagPrefix(tag), tag)
@@ -255,24 +265,24 @@ func (ddb *DocumentLevelDB)AddTag(t []string)  error{
 	return ddb.db.Write(batch, nil)
 }
 
-func (ddb *DocumentLevelDB) GetTag()[]string{
+func (ddb *DocumentLevelDB) GetTag() []string {
 	ret := make([]string, 0, 10)
 	iter := ddb.db.NewIterator(&util.Range{
 		Start: tagPreFix,
 		Limit: nil,
-	},nil)
+	}, nil)
 	defer iter.Release()
 	i := 0
 	iter.Next()
-	for iter.Next(){
-		tmpSplit := bytes.Split(iter.Key(),[]byte("::"))
-		if len(tmpSplit) < 2{
+	for iter.Next() {
+		tmpSplit := bytes.Split(iter.Key(), []byte("::"))
+		if len(tmpSplit) < 2 {
 			continue
 		}
-		ret = append(ret,string(tmpSplit[1]))
+		ret = append(ret, string(tmpSplit[1]))
 		i++
-		if i== len(ret){
-			tmp := make([]string, len(ret), len(ret) * 2)
+		if i == len(ret) {
+			tmp := make([]string, len(ret), len(ret)*2)
 			copy(tmp, ret)
 			ret = tmp
 		}

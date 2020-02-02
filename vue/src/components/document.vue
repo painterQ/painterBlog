@@ -43,8 +43,9 @@
                         <i class="el-icon-edit drawer-append-edit" @click="addTag"></i>
                     </template>
                 </el-input>
-                <hr/> <p style="margin: 0">摘要</p>
-                <el-input type="textarea"  :rows="6" v-model="abstract"
+                <hr/>
+                <p style="margin: 0">摘要</p>
+                <el-input type="textarea" :rows="6" v-model="abstract"
                           placeholder="请输入摘要">
                 </el-input>
             </el-form>
@@ -66,6 +67,7 @@
     import 'tinymce/plugins/wordcount'// 字数统计插件
     import {Drawer, Tag} from "element-ui";
 
+    Vue.use(api);
     Vue.use(Drawer);
     Vue.use(Tag);
     export default {
@@ -130,21 +132,33 @@
                     resize: true,
                     // 此处为图片上传处理函数，这个直接用了base64的图片形式上传图片，
                     // 如需ajax上传可参考https://www.tiny.cloud/docs/configure/file-image-upload/#images_upload_handler
-                    images_upload_handler: (blobInfo, success, /*failure*/) => {
-                        // if (this.allowedFileTypes.indexOf(blobInfo.blob.type) > -1) {
-                        uploadPic()
-                        // } else {
-                        //     console.log('图片格式错误')
-                        // }
-                        function uploadPic() {
-                            const img = 'data:image/jpeg;base64,' + blobInfo.base64()
-                            api.uploadImage(img).then((res) => {
-                                // 这里返回的是你图片的地址
-                                success(res.data.url)
-                            }).catch(() => {
-                                console.log('上传失败')
-                            })
-                        }
+                    images_upload_handler: (blobInfo, success, failure) => {
+                        (async () => {
+                            let file = blobInfo.blob()
+                            let type = file.type;
+                            if (type !== "image/png" && type !== "image/jpeg" && type !== "image/gif") {
+                                failure("support png、jpeg、gif");
+                                return
+                            }
+
+                            let fileName = blobInfo.filename()
+                            if (fileName.length > 64) {
+                                failure("文件名称不要长于64");
+                                return
+                            }
+                            //"data:" + type + ";base64," +
+                            let res = await api.uploadImage({
+                                img:  blobInfo.base64(),
+                                type: type,
+                                name: fileName,
+                            });
+                            if (!res || !res.data || !res.data.url) {
+                                failure();
+                                return
+                            }
+                            success(res.data.url)
+                        })()
+
                     },
 
                 },
@@ -161,17 +175,18 @@
         methods: {
             // 添加相关的事件，可用的事件参照文档=> https://github.com/tinymce/tinymce-vue => All available events
             // 需要什么事件可以自己增加
-            release() {
-                if(!this.path.startsWith('/')){
+            async release() {
+                if (!this.path.startsWith('/')) {
                     this.path = "/" + this.path
                 }
-                api.postDoc({
+                await this.$_postDoc({
                     title: this.title,
                     path: this.path,
                     abstract: this.abstract,
                     tag: this.tag,
                     document: this.myValue,
-                })
+                });
+                this.$message(this, "发布成功", 'success');
             },
             // 可以添加一些自己的自定义事件，如清空内容
             clear() {
@@ -180,32 +195,24 @@
             more() {
                 this.drawer = true
             },
-            addTag(){
-                if (this.newTag === ""){
+            async addTag() {
+                if (this.newTag === "") {
                     return
                 }
                 //获取常用tag get /docs/tag
-                api.addTag([this.newTag]).then(
-                    () => {
-                        this.tag.push(this.newTag);
-                        this.tag  = [...new Set(this.tag)];
-                        this.commonTags.push(this.newTag);
-                        this.commonTags  = [...new Set(this.commonTags)];
-                        this.newTag=""
-                    }).catch(() => {
-                    console.log('新建tag失败')
-                })
+                await this.$_addTag([this.newTag])
+                this.tag.push(this.newTag);
+                this.tag = [...new Set(this.tag)];
+                this.commonTags.push(this.newTag);
+                this.commonTags = [...new Set(this.commonTags)];
+                this.newTag = ""
             }
         },
-        mounted() {
+        async mounted() {
             let self = this
             //获取常用tag get /docs/tag
-            api.getTags().then(
-                (res) => {
-                    self.commonTags = res.data
-                }).catch(() => {
-                console.log('获取tag失败')
-            })
+            let res = await this.$_getTags()
+            self.commonTags = res.data
         }
     }
 </script>
@@ -239,19 +246,21 @@
         font-size: 1.5em;
         background-color: #fafafa;
     }
-    .document-drawer{
+
+    .document-drawer {
         margin: 1em;
     }
 
-    .document-drawer-input{
+    .document-drawer-input {
         margin: 5px 0;
         width: 100%;
     }
 
-    .drawer-append-edit{
+    .drawer-append-edit {
         color: #0080ff;
     }
-    .drawer-append-edit:hover{
+
+    .drawer-append-edit:hover {
         color: green;
         font-weight: bold;
         cursor: pointer;

@@ -18,9 +18,8 @@ Mock.mock('/login', 'post', (options) => {
     }
 });
 
-Mock.mock('/doc/image', 'post', (options) => {
-    console.log('options:', options)
-    console.log("上传图片")
+Mock.mock('/docs/image/filter', 'post', (options) => {
+    console.log('api, 上传图片 options:', options)
     return {'url':"http://localhost:8080/public/img/background.0ed615ed.jpg"}
 });
 

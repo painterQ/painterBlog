@@ -5,9 +5,9 @@
                 <!--                <strong class="tag-tital"></strong>-->
                 <!-- 使用外部插件自动生成目录npm i katelog -S-->
                 <!-- https://github.com/KELEN/katelog-->
-                <div id="doc-cateLog" ref="doc-cateLog" ></div>
+                <div id="doc-cateLog" ref="doc-cateLog"></div>
             </index-aside>
-            <div  class="index-body-main">
+            <div class="index-body-main">
                 <!-- learn: 插入HTML-->
                 <main id="doc-content" v-html="document"></main>
             </div>
@@ -36,57 +36,45 @@
 
     export default {
         name: "index-docs-body",
-        components:{
+        components: {
             indexAside
         },
         data: function () {
             return {
-                scroll : 0,
+                scroll: 0,
                 kateLog: null,
-                document: "",
                 menuFloat: false
             }
         },
-        watch: {
-            document() {
+        computed: {
+            document(){
+                let doc = this.$store.getters.getDoc;
+                if (doc === "/404"){
+                    this.$router.replace("/404");
+                    return ""
+                }
                 this.$nextTick(() => {
                     this.kateLog.rebuild();
-                })
+                });
+                return doc
             },
         },
         methods: {
-            prevDoc(){
+            prevDoc() {
                 //仍然在当前组件，所以只是复用，没有重新触发mounted
                 let current = this.$route.path.substr(4);
-                let pref = this.$store.state.docs.prev(current);
-                if (pref === current) return;
-                this.$router.push("/doc" + pref);
+                let prev = this.$store.getters.prevDoc;
+                if (!prev || prev === current) return;
+                this.$router.push("/doc" + prev);
             },
-            nextDoc(){
+            nextDoc() {
                 let current = this.$route.path.substr(4);
-                let next = this.$store.state.docs.next(current);
-                if (next === current) return;
+                let next = this.$store.getters.nextDoc;
+                if (!next || next === current) return;
                 this.$router.push("/doc" + next);
-            },
-            render(path) {
-                if(!/^\/doc\/.*/.test(path)){
-                    return
-                }
-                path = path.substr(4);
-                console.log('change docs', "id:" + path);
-                this.$store.state.docs.get(path).then(
-                    (data)=>{
-                        if(data === null){
-                            this.$router.replace("/404");
-                            return
-                        }
-                        this.document = data;
-                    }
-                )
             },
         },
         mounted() {
-            console.log("doc page mounted ")
             this.kateLog = new kateLogClass({
                 contentEl: 'doc-content',
                 catelogEl: 'doc-cateLog',
@@ -96,12 +84,6 @@
                 selector: ['h2', 'h3'],
                 active: null
             });
-            this.render(this.$route.path)
-        },
-        //组件内的路由守卫
-        beforeRouteUpdate(to,from,next){
-            this.render(to.path);
-            next();
         },
     }
 </script>
@@ -163,7 +145,7 @@
 </style>
 
 <style>
-    .index-body-all{
+    .index-body-all {
         display: flex;
         flex-flow: column;
         flex-direction: row-reverse;
@@ -174,18 +156,19 @@
         align-items: flex-start;
         margin: 2em;
         width: 20em;
-        flex-grow:2;
+        flex-grow: 2;
     }
 
     .index-body-aside {
         border-left: rgba(88, 88, 88, 0.1) 1px solid;
         margin: 0 0 0 1em;
-        flex-grow:1;
+        flex-grow: 1;
         max-width: 10em;
         /*top: 10px;*/
         /*position: sticky;*/
         height: 400px;
     }
+
     .k-catelog-link {
         font-size: 0.7em;
         word-break: keep-all;

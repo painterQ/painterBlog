@@ -4,7 +4,9 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/painterQ/painterBlog/controllers"
+	"github.com/painterQ/painterBlog/models"
 	_ "github.com/painterQ/painterBlog/routers"
+	"path"
 )
 
 //go:generate  go generate ./vue
@@ -22,6 +24,8 @@ func main() {
 	beego.InsertFilter(tf.GetPattern(), tf.GetPosition(), tf.GetFilter())
 
 	beego.DelStaticPath("static")
+	dbPath := beego.AppConfig.DefaultString(models.ConfigDBPath, models.DefaultDBPathConfig)
+	beego.SetStaticPath("/image",path.Join(dbPath, models.ImagePath))
 	beego.SetStaticPath("/static", "./static")
 	beego.Run()
 }

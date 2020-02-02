@@ -1,4 +1,4 @@
-package internal
+package appConfig
 
 import (
 	"crypto/rand"
@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/scrypt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -70,10 +71,11 @@ func (a *AppConfig) Start(filePath string) error {
 	if err != nil {
 		return fmt.Errorf("open app.json file:" + err.Error())
 	}
-
+	//avatar
 	if len(a.NormalConfig.Avatar) == 0 {
 		return fmt.Errorf("init error, get Avatar error : get empty")
 	}
+	a.NormalConfig.Avatar = strings.Trim(strings.Trim(a.NormalConfig.Avatar,"."),"/")
 
 	//pwd
 	if len(a.PWD.Key) == 0 {

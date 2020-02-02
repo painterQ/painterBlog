@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import {Message,MessageBox} from 'element-ui'
-
+Vue.use(MessageBox)
+Vue.use(Message)
 Vue.prototype.$message = Message;
 Vue.prototype.$messageBox = MessageBox;
 

@@ -2,27 +2,7 @@ package models
 
 import (
 	"encoding/json"
-	"github.com/astaxie/beego"
-	"path"
 )
-
-var DocumentDataBaseSingleCase DocumentDataBase
-
-const (
-	DocDBPath     = "./doc"
-	defaultDBPath = "/tmp/painter"
-	ConfigDBPath  = "db"
-)
-
-func init() {
-	DocumentDataBaseSingleCase = &DocumentLevelDB{}
-	dbPath := beego.AppConfig.DefaultString(ConfigDBPath, defaultDBPath)
-	dbPath = path.Join(dbPath, DocDBPath)
-	err := DocumentDataBaseSingleCase.Init(dbPath,nil)
-	if err != nil{
-		panic(err)
-	}
-}
 
 //DocumentDataBase document data base
 type DocumentDataBase interface {

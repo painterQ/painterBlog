@@ -7,10 +7,8 @@ import (
 	"github.com/astaxie/beego/logs"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
-	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"net"
-	"os"
 	"path"
 	"sync"
 	"sync/atomic"
@@ -18,11 +16,12 @@ import (
 )
 
 var AccessLogSingleCase AccessLog
+
 const AccessDBPath = "./access"
 
 func init() {
 	AccessLogSingleCase = new(AccessLogLevelDBImpl)
-	dbPath := beego.AppConfig.DefaultString(ConfigDBPath, defaultDBPath)
+	dbPath := beego.AppConfig.DefaultString(ConfigDBPath, DefaultDBPathConfig)
 	dbPath = path.Join(dbPath, AccessDBPath)
 	err := AccessLogSingleCase.Start(dbPath)
 	if err != nil {
@@ -108,32 +107,10 @@ func (a *AccessLogLevelDBImpl) Start(path string) error {
 	if !atomic.CompareAndSwapInt32(&a.inited, 0, 1) {
 		return errors.New("already init")
 	}
-
-	openDB := func(path string) (newDB *leveldb.DB) {
-		db, err := leveldb.OpenFile(path, &opt.Options{
-			Comparer: new(DocumentComparer),
-		})
-		switch {
-		case errors.IsCorrupted(err):
-			logs.Error("database (%v) corrupted, process try to recover: %v", path, err.Error())
-			db, err = leveldb.RecoverFile(path, nil)
-			if err != nil {
-				logs.Error("try to recover fail: %v", path, err.Error())
-				return nil
-			}
-			return db
-		case err == os.ErrExist:
-			logs.Warn("database (%v) is exist, use old database", path)
-			fallthrough
-		case err == nil:
-			return db
-		default:
-			logs.Error("opening database (%v) encountered unknown error: %v", path, err.Error())
-			return nil
-		}
+	a.db = openDB(path, nil, false, nil)
+	if a.db == nil {
+		return errors.New("open db " + path + " error")
 	}
-
-	a.db = openDB(path)
 	return nil
 }
 

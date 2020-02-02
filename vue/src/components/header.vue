@@ -2,15 +2,13 @@
     <div class="painter-header">
         <div :style="logo"/>
         <div class="header-profile">
-            <el-form class="header-search">
+            <el-form>
                 <el-input placeholder="搜索..." prefix-icon="el-icon-search"></el-input>
             </el-form>
 
             <el-dropdown @command="logout">
                 <el-avatar
-                        class="header-avatar"
                         shape="circle"
-                        ref="avatar"
                         :size="40"
                         fit="contain"
                         :src="avatar"
@@ -30,6 +28,8 @@
     import {Dropdown, DropdownItem, DropdownMenu} from "element-ui"
     import VueCookies from 'vue-cookies'
     import constVar from '../api/const'
+
+    Vue.use(api);
     Vue.use(VueCookies);
     Vue.use(Dropdown);
     Vue.use(DropdownItem);
@@ -64,27 +64,22 @@
             logout(command) {
                 switch (command) {
                     case "logout":
-                        console.log(this);
                         this.$cookies.remove(constVar.cookieKey)
                         this.$store.commit("changeLogin", false)
-                        console.log(this.$store.state.login, this.$cookies.get(constVar.cookieKey))
                         break
                 }
             }
         },
-        mounted() {
-            api.getAuthorInfo().then(
-                (res) => {
-                    this.$store.commit("changeAvatar", res.data.avatar);
-                    this.$store.commit("changeName", res.data.name);
-                    this.$store.commit("changeMotto", res.data.say);
-                    this.$store.commit("changeIPC", res.data.ipc);
-                    this.$store.commit("changeTitle", res.data.title);
-                    this.$store.commit("changeSubTitle", res.data.subTitle);
-                    this.$store.commit("changeMail", res.data.email);
-                    this.$store.commit("changeGithub", res.data.github);
-                }
-            )
+        async mounted() {
+            let res = await this.$_getAuthorInfo()
+            this.$store.commit("changeAvatar", res.data.avatar);
+            this.$store.commit("changeName", res.data.name);
+            this.$store.commit("changeMotto", res.data.say);
+            this.$store.commit("changeIPC", res.data.ipc);
+            this.$store.commit("changeTitle", res.data.title);
+            this.$store.commit("changeSubTitle", res.data.subTitle);
+            this.$store.commit("changeMail", res.data.email);
+            this.$store.commit("changeGithub", res.data.github);
         }
     }
 </script>

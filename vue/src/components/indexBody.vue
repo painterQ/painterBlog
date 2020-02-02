@@ -26,7 +26,7 @@
                         :page-size="pageSize"
                         :current-page.sync="currentPage"
                         @current-change="up2Top"
-                        :total=this.totalNum>
+                        :total="this.$store.state.total">
                 </el-pagination>
             </div>
         </div>
@@ -58,19 +58,10 @@
             }
         },
         computed: {
-            totalNum() {
-                return this.$store.state.total
-            },
-
             docList() {
-                console.log(this.$store.state.docsUpdate)//强制依赖
-                this.$store.commit("setDocListUpdateState", false)
-                let output = [];
-                for (let e of this.$store.state.docs) {
-                    output.push(e)
-                }
+                let all = this.$store.getters.docMateList;
                 //分页逻辑 [(currentPage -1) * pageSize, currentPage * pageSize)
-                return output.slice((this.currentPage - 1) * this.pageSize,
+                return all.slice((this.currentPage - 1) * this.pageSize,
                     this.currentPage * this.pageSize)
             }
         },

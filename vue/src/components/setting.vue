@@ -8,9 +8,10 @@
                         class="avatar-uploader"
                         action="https://jsonplaceholder.typicode.com/posts/"
                         :show-file-list="false"
-                        :on-success="handleAvatarSuccess"
-                        :before-upload="beforeAvatarUpload">
-                    <img v-if="avatar" :src="avatar" class="avatar">
+                        @success="this.handleAvatarSuccess"
+                        @error="this.avatarError"
+                        :before-upload="this.beforeAvatarUpload">
+                    <img v-if="this.avatar" :src="this.avatar" class="avatar">
                     <i v-else class="el-icon-plus avatar-uploader-icon"></i>
                 </el-upload>
                 <div>
@@ -41,7 +42,7 @@
                 <el-input v-model="title"></el-input>
                 <span>用于所有页面的title组成, 如: Painter's Blog</span>
             </el-form-item>
-            <el-form-item label="格言" prop="motto" >
+            <el-form-item label="格言" prop="motto">
                 <el-input v-model="motto" type="textarea" autosize></el-input>
                 <span>格言, 如: 生活百般滋味, 人生需要笑对.</span>
             </el-form-item>
@@ -79,6 +80,7 @@
 <script>
     import vue from 'vue'
     import api from '../api/rpc'
+    vue.use(api);
     import {
         Form, FormItem, Select, Option, OptionGroup,
         Input, Button, Checkbox, CheckboxGroup, Switch,
@@ -130,8 +132,9 @@
                         {required: true, message: '请输入密码', trigger: 'blur'},
                     ],
                     rePWD: [
-                        {validator: (rule, value, callback) => {
-                            console.log("validator",value)
+                        {
+                            validator: (rule, value, callback) => {
+                                console.log("validator", value)
                                 if (value === '') {
                                     callback(new Error('请再次输入密码'));
                                 } else if (value !== this.pwd) {
@@ -139,7 +142,8 @@
                                 } else {
                                     callback();
                                 }
-                            }, trigger: 'change'},
+                            }, trigger: 'change'
+                        },
                     ],
                 }
             }
@@ -215,8 +219,8 @@
                 switch (name) {
                     case  'baseInfoForm':
                         this.$refs['baseInfoForm'].validate((valid) => {
-                            if (valid){
-                                api.changeBaseInfo({
+                            if (valid) {
+                                this.$_changeBaseInfo({
                                     mail: this.mail,
                                     github: this.github,
                                 });
@@ -225,8 +229,8 @@
                         return;
                     case  'blogInfoForm':
                         this.$refs['blogInfoForm'].validate((valid) => {
-                            if (valid){
-                                api.changeBlogInfo({
+                            if (valid) {
+                                this.$_changeBlogInfo({
                                     name: this.name,
                                     title: this.title,
                                     subTitle: this.motto,
@@ -237,8 +241,8 @@
                         return;
                     case  'pwdChangeForm':
                         this.$refs["pwdChangeForm"].validate((valid) => {
-                            if (valid){
-                                api.changePwdChange({
+                            if (valid) {
+                                this.$_changePwdChange({
                                     pwd: this.pwd,
                                 });
                             }
@@ -248,30 +252,27 @@
                         return;
                 }
             },
-            clear(name) {
+            async clear(name) {
                 if (name === 'pwdChangeForm') {
                     this.pwd = '';
                     this.rePWD = '';
                     this.$refs["pwdChangeForm"].resetFields();
                 } else if (name === 'baseInfoForm' || name === 'blogInfoForm') {
-                    api.getAuthorInfo().then(
-                        (res) => {
-                            switch (name) {
-                                case  'baseInfoForm':
-                                    this.$store.commit("changeMail", res.data.email);
-                                    this.$store.commit("changeGithub", res.data.github);
-                                    break;
-                                case  'blogInfoForm':
-                                    this.$store.commit("changeAvatar", res.data.avatar);
-                                    this.$store.commit("changeName", res.data.name);
-                                    this.$store.commit("changeMotto", res.data.say);
-                                    this.$store.commit("changeIPC", res.data.ipc);
-                                    this.$store.commit("changeTitle", res.data.title);
-                                    this.$store.commit("changeSubTitle", res.data.subTitle);
-                                    break
-                            }
-                        }
-                    )
+                    let res = await this.$_getAuthorInfo();
+                    switch (name) {
+                        case  'baseInfoForm':
+                            this.$store.commit("changeMail", res.data.email);
+                            this.$store.commit("changeGithub", res.data.github);
+                            break;
+                        case  'blogInfoForm':
+                            this.$store.commit("changeAvatar", res.data.avatar);
+                            this.$store.commit("changeName", res.data.name);
+                            this.$store.commit("changeMotto", res.data.say);
+                            this.$store.commit("changeIPC", res.data.ipc);
+                            this.$store.commit("changeTitle", res.data.title);
+                            this.$store.commit("changeSubTitle", res.data.subTitle);
+                            break
+                    }
                 }
             },
         },

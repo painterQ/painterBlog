@@ -28,6 +28,7 @@
     import VueCookies from 'vue-cookies'
     import constVar from '../api/const'
 
+    vue.use(api);
     vue.use(VueCookies);
     vue.use(Dialog);
     export default {
@@ -55,20 +56,15 @@
                 this.$refs["loginForm"].resetFields();
             },
             loginSubmit() {
-                this.$refs["loginForm"].validate((valid) => {
+                this.$refs["loginForm"].validate(async valid => {
                     if (valid) {
-                        api.login({'name': this.mail, 'password': this.pwd}).then(
-                            (res) => {
-                                if (res.data.status === 1) {
-                                    this.$store.commit("changeLogin", true);
-                                    console.log("console.log(commit(\"changeLogin\", true);)\n")
-                                } else {
-                                    message(this, "登录失败:" + res.data.message);
-                                }
-                            }
-                        ).catch(e => {
-                            message(this, "登录失败:" + e, "error");
-                        })
+                        let res = await this.$_login({'name': this.mail, 'password': this.pwd})
+                        if (res.data.status === 1) {
+                            this.$store.commit("changeLogin", true);
+                            console.log("console.log(commit(\"changeLogin\", true);)\n")
+                        } else {
+                            message(this, "登录失败:" + res.data.message);
+                        }
                     }
                 });
             },

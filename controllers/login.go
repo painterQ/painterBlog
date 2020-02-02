@@ -37,7 +37,7 @@ func (lc *LoginController) URLMapping() {
 //          email: ""}
 // @router / [get]
 func (lc *LoginController) GetAuthorInfo() {
-	bs, _ := models.AuthorSingleCase.MarshalJSON()
+	bs, _ := models.AuthorSingleCase.MarshalJSON(webDN)
 	responseJson(lc.Ctx, bs)
 }
 
