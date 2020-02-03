@@ -5,10 +5,6 @@ Vue.use(Vuex);
 
 const store = new Vuex.Store({
     state: {
-        viewState: {
-            index: 1,
-            asideSwitch: true,
-        },
         login: false,
 
         author: {
@@ -22,11 +18,7 @@ const store = new Vuex.Store({
             IPC: '',
         }
     },
-    // getters: {
-    //     doneTodos: state => {
-    //         return state.todos.filter(todo => todo.done)
-    //     }
-    // },
+
     mutations: {
         changeIndex: (state, index) => {
             state.viewState.index = index

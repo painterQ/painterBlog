@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/asn1"
 	"encoding/hex"
+	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
@@ -23,10 +24,11 @@ var one = big.NewInt(1)
 var zero = big.NewInt(0)
 
 type ImageInfo struct {
-	ID   []byte
-	Name string
-	Type string
-	Src  string
+	ID   []byte	`json:"id"`
+	Name string	`json:"name"`
+	Type string	`json:"type"`
+	Src  string	`json:"src"`
+	//todo 缩略图
 }
 
 type ImageStore interface {
@@ -101,6 +103,7 @@ func New(mateDBPath, imagePath, globalDBPath string) ImageStore {
 		}
 	} else {
 		ierr := ret.UpdateIndexFormDb()
+		fmt.Println("### init index with "+ ret.index.Text(10))
 		if ierr != nil {
 			panic("init ImageStore error:" + ierr.Error())
 		}
@@ -210,6 +213,7 @@ func (i *levelDBImpl) SaveImage(data []byte, name, imageType string, id []byte) 
 	//write db
 	if id == nil {
 		id = i.addIndexAtomic().Bytes()
+		fmt.Println("现在image的index是",new(big.Int).SetBytes(id).Text(10))
 	}
 	src := path.Join(i.imagePath, hex.EncodeToString(id)+"."+imageType)
 	ret := &ImageInfo{
@@ -220,6 +224,7 @@ func (i *levelDBImpl) SaveImage(data []byte, name, imageType string, id []byte) 
 	}
 	value, _ := asn1.Marshal(*ret)
 	err := i.db.Put(id, value, nil)
+	fmt.Println("db put with id "+ new(big.Int).SetBytes(id).Text(10))
 	if err != nil {
 		return nil, errors.New("db put error:" + err.Error())
 	}

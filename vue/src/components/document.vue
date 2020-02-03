@@ -58,6 +58,7 @@
     import api from '../api/rpc'
     import 'tinymce/themes/silver'
     import Vue from 'vue'
+    import message from "../api/message";
     // 编辑器插件plugins
     // 更多插件参考：https://www.tiny.cloud/docs/plugins/
     import 'tinymce/plugins/image'// 插入上传图片插件
@@ -68,6 +69,7 @@
     import {Drawer, Tag} from "element-ui";
 
     Vue.use(api);
+    Vue.use(message);
     Vue.use(Drawer);
     Vue.use(Tag);
     export default {
@@ -186,7 +188,7 @@
                     tag: this.tag,
                     document: this.myValue,
                 });
-                this.$message(this, "发布成功", 'success');
+                message.message(this, "发布成功", 'success');
             },
             // 可以添加一些自己的自定义事件，如清空内容
             clear() {

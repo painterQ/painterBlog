@@ -8,6 +8,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/painterQ/painterBlog/models"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -26,6 +27,7 @@ func (d *DocumentsController) URLMapping() {
 	d.Mapping("AddTag", d.AddTag)                             //post 	/docs/tag/filter	*
 	d.Mapping("GetTags", d.GetTags)                           //get 	/docs/tag
 	d.Mapping("UploadImage", d.UploadImage)                   //post	/docs/image/filter 	*
+	d.Mapping("GetImageList",d.GetImageList)				  //get		/docs/image/filter 	*
 }
 
 //GetDocument 获取文章内容
@@ -160,10 +162,10 @@ func (d *DocumentsController) AddTag() {
 //data: { img: img, type: blobInfo.blob.type }
 //return: {'url':"http://localhost:8080/public/img/background.0ed615ed.jpg"}
 // @router /image/filter [post]
-// dataURL 'data:image/jpeg;base64,'+base64
 func (d *DocumentsController) UploadImage() {
 	var para struct {
 		Type string `json:"type"` //image/png  image/jpeg   image/jpg
+		// dataURL 'data:image/jpeg;base64,'+base64
 		Img  string `json:"img"`  //base64
 		Name string `json:"name"`
 	}
@@ -198,4 +200,39 @@ func (d *DocumentsController) UploadImage() {
 	}
 	url := strings.Join([]string{webDN,info.Src}, "/")
 	responseJson(d.Ctx, fmt.Sprintf(`{"url":"%s"}`, url))
+}
+
+//GetImageList 获取图片列表
+//method: Get
+//path /docs/image/filter
+//para: start、limit
+//return: [{"id":"","name":"","type":"","src":"",}]
+// @router /image/filter [get]
+func (d *DocumentsController) GetImageList() {
+	start,err := strconv.Atoi(d.Input().Get("start"))
+	if err != nil{
+		responseJson(d.Ctx, fmt.Errorf("parameter [start] error:"+err.Error() ))
+		return
+	}
+	limit,err := strconv.Atoi(d.Input().Get("limit"))
+	if err != nil{
+		responseJson(d.Ctx, fmt.Errorf("parameter [limit] error:"+err.Error() ))
+		return
+	}
+	if limit > 20 {
+		responseJson(d.Ctx, fmt.Errorf("parameter [limit] have to little then 20"))
+		return
+	}
+	infos := models.ImageStoreSingleCase.GetAllImageInfo(int64(start),int64(limit))
+	for i:= range infos{
+		infos[i].Src = strings.Join([]string{webDN,infos[i].Src}, "/")
+	}
+	fmt.Println(start,limit,infos)
+
+	response,err := json.Marshal(infos)
+	if err != nil{
+		responseJson(d.Ctx, err)
+		return
+	}
+	responseJson(d.Ctx,response)
 }

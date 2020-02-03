@@ -28,6 +28,7 @@
     import VueCookies from 'vue-cookies'
     import constVar from '../api/const'
 
+    vue.use(message);
     vue.use(api);
     vue.use(VueCookies);
     vue.use(Dialog);
@@ -61,9 +62,9 @@
                         let res = await this.$_login({'name': this.mail, 'password': this.pwd})
                         if (res.data.status === 1) {
                             this.$store.commit("changeLogin", true);
-                            console.log("console.log(commit(\"changeLogin\", true);)\n")
+                            message.message(this, "登录成功","success");
                         } else {
-                            message(this, "登录失败:" + res.data.message);
+                            message.message(this, "登录失败:" + res.data.message,"error");
                         }
                     }
                 });
@@ -76,7 +77,6 @@
         },
         mounted() {
             let cookie = this.$cookies.get(constVar.cookieKey);
-            console.log("cookie", cookie);
             if (cookie && cookie.indexOf("clear") < 0) {
                 this.$store.commit("changeLogin", true);
             }

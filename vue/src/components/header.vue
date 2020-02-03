@@ -51,7 +51,6 @@
         computed: {
             avatar: {
                 get() {
-                    console.log("header get avatar", this.$store.state.author.avatar)
                     return this.$store.state.author.avatar
                 }
             },

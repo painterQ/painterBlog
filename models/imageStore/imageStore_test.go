@@ -120,7 +120,7 @@ func TestLevelDBImpl_GetAllImageInfo(t *testing.T) {
 		_, _ = rand.Read(tmp)
 		imginfo, err := instance.SaveImage(getRandomImage(), hex.EncodeToString(tmp), "jpeg", nil)
 		assert.NotNil(t, imginfo)
-		assert.Nil(t,err)
+		assert.Nil(t, err)
 		p := path.Join("./testdata/tmp", imginfo.Src)
 		_, err = os.Stat(p)
 		assert.Nil(t, err)
@@ -147,7 +147,7 @@ func TestLevelDBImpl_RemoveImage(t *testing.T) {
 		assert.Nil(t, err)
 	}
 	end := instance.getIndexAtomic().Uint64()
-	infos := instance.GetAllImageInfo(int64(end+1),int64(start)) // include end
+	infos := instance.GetAllImageInfo(int64(end+1), int64(start)) // include end
 	assert.Equal(t, int(end-start+1), len(infos))
 	err := instance.RemoveImage(infos[33].ID)
 	assert.Nil(t, err)
@@ -166,7 +166,7 @@ func TestNew(t *testing.T) {
 	list, err := ioutil.ReadDir("./testdata/tmp/db")
 	assert.Nil(t, err)
 	for i := range list {
-		f, err := os.OpenFile(path.Join("./testdata/tmp/db", list[i].Name()),os.O_RDWR|os.O_SYNC, 0666)
+		f, err := os.OpenFile(path.Join("./testdata/tmp/db", list[i].Name()), os.O_RDWR|os.O_SYNC, 0666)
 		assert.Nil(t, err)
 		err = f.Truncate(list[i].Size() / 2)
 		assert.Nil(t, err)
@@ -178,4 +178,27 @@ func TestNew(t *testing.T) {
 	assert.Nil(t, New("./db", "image", "./testdata/tmp"))
 	_ = os.RemoveAll("./testdata/tmp")
 	instance = New("./db", "image", "./testdata/tmp").(*levelDBImpl)
+}
+
+
+func TestIndex(t *testing.T) {
+	start := instance.getIndexAtomic().Uint64()
+	var wg sync.WaitGroup
+	wg.Add(1000)
+	for i := 0; i < 1000; i++ {
+		go func() {
+			for j := 0; j < 1000; j++ {
+				instance.addIndexAtomic()
+			}
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+
+	index := instance.getIndexAtomic().Uint64()
+	assert.Equal(t, uint64(1000000), index-start)
+	instance.Release()
+	instance = New("./db", "image", "./testdata/tmp").(*levelDBImpl)
+	assert.Equal(t,big.NewInt(int64(index)),instance.index)
+	assert.Equal(t,index,instance.getIndexAtomic().Uint64())
 }

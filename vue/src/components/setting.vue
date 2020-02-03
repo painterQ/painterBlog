@@ -80,10 +80,12 @@
 <script>
     import vue from 'vue'
     import api from '../api/rpc'
+    import message from "../api/message";
+    vue.use(message);
     vue.use(api);
     import {
         Form, FormItem, Select, Option, OptionGroup,
-        Input, Button, Checkbox, CheckboxGroup, Switch,
+        Input, Checkbox, CheckboxGroup, Switch,
         Avatar, Divider, Upload
     } from 'element-ui'
 
@@ -94,7 +96,6 @@
         vue.use(Option);
         vue.use(OptionGroup);
         vue.use(Input);
-        vue.use(Button);
         vue.use(CheckboxGroup);
         vue.use(Checkbox);
         vue.use(Avatar);
@@ -283,16 +284,16 @@
             this.avatar = URL.createObjectURL(file.raw);
         },
         beforeAvatarUpload(file) {
-            const isJPG = file.type === 'image/jpeg';
-            const isLt2M = file.size / 1024 / 1024 < 2;
+            const supportType = ['image/jpeg','image/png','image/gif'].indexOf(file.type) > -1
+            const sizeLimit = file.size / 1024 / 1024 < 3;
 
-            if (!isJPG) {
-                this.$message.error('上传头像图片只能是 JPG 格式!');
+            if (!supportType) {
+                message.message(this,'Only support jpeg/png/gif','warning');
             }
-            if (!isLt2M) {
-                this.$message.error('上传头像图片大小不能超过 2MB!');
+            if (!sizeLimit) {
+                message.message(this,'Image size limit: 3MByte','warning');
             }
-            return isJPG && isLt2M;
+            return supportType && sizeLimit;
         },
     }
 </script>
@@ -354,7 +355,6 @@
 
     .line > * {
         font-size: 1.5em;
-        font-size: large;
         background-color: #fafafa;;
     }
 </style>

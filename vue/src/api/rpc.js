@@ -101,6 +101,18 @@ function getAuthorInfo() {
     return util.get("/login", undefined, vue)
 }
 
+//GetImageList 获取图片列表
+//method: Get
+//path /docs/image/filter
+//para: start、limit
+//return: [{"id":"","name":"","type":"","src":"",}]
+// @router /image/filter [get]
+function getImageList({start,limit}) {
+    console.log("api, 获取图片列表");
+    let vue = this === undefined || this === window ||!this._isVue? nil:this;
+    return util.get('/docs/image/filter',{start:start,limit:limit},vue)
+}
+
 
 //导出 default的含义
 export default {
@@ -116,7 +128,8 @@ export default {
         vue.prototype.$_postDoc = postDoc;
         vue.prototype.$_getTags = getTags;
         vue.prototype.$_addTag = addTag;
-        vue.prototype.$_getAuthorInfo = getAuthorInfo
+        vue.prototype.$_getAuthorInfo = getAuthorInfo;
+        vue.prototype.$_getImageList = getImageList
     },
     login,
     changeBaseInfo,
@@ -127,5 +140,6 @@ export default {
     uploadImage,
     postDoc,
     getTags, addTag,
-    getAuthorInfo
+    getAuthorInfo,
+    getImageList
 }
