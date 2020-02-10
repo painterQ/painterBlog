@@ -7,8 +7,8 @@
 </template>
 
 <script>
-    let colorList = ["Blue","BlueViolet","HotPink" ,
-            "Lime","OrangeRed","Tomato","OliveDrab"];
+    let colorList = ["Blue","BlueViolet" ,
+        "Lime","OrangeRed","Tomato","OliveDrab"];
     export default {
         name: "painter-tag",
         data(){
@@ -23,7 +23,7 @@
         },
         methods:{
             click(e){
-                var eventdom = e.target
+                var eventdom = e.target;
                 console.log("click tag", eventdom.innerHTML)
             },
             hover(){
@@ -32,7 +32,7 @@
             },
             hout(){
                 this.borderColor = this.tmp
-            }
+            },
         }
     }
 </script>

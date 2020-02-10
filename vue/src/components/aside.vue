@@ -61,8 +61,8 @@
             handleSelect(index) {
                 let currentPath = this.$route.path
                 let path = "";
-                for(let e of map){
-                    if (e.index === index){
+                for (let e of map) {
+                    if (e.index === index) {
                         path = e.path
                     }
                 }
@@ -74,7 +74,6 @@
                     replace ?
                         this.$router.replace(path) :
                         this.$router.push(path);
-                    this.$store.commit('changeIndex', index);
                 } catch (e) {
                     console.log(e)
                 }
@@ -83,16 +82,20 @@
                 this.isCollapse = !this.isCollapse
             },
         },
-        mounted() {
-            let index = "";
-            let path = this.$route.path;
-            for(let e of map){
-                if (e.path === path){
-                    index = e.index
-                }
-            }
-            if(index !== ""){
-                this.active = index
+        watch: {
+            "$route.path": {
+                handler(newPath){
+                    let index = "";
+                    for (let e of map) {
+                        if (e.path === newPath) {
+                            index = e.index
+                        }
+                    }
+                    if (index !== "") {
+                        this.active = index
+                    }
+                },
+                immediate: true
             }
         }
     }

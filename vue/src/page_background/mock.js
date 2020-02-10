@@ -23,6 +23,10 @@ Mock.mock('/docs/image/filter', 'post', (options) => {
     return {'url':"http://localhost:8080/public/img/background.0ed615ed.jpg"}
 });
 
+Mock.mock('/docs/image/filter', 'delete', (options) => {
+    console.log('api, 删除文档:', options)
+});
+
 let r = [];
 for(let i = 0;i<160;i++){
     r.push(i + "曦曦 爱你".repeat(Math.ceil(Math.random() * 20)))

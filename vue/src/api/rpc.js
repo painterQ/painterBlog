@@ -6,6 +6,12 @@ function login(user) {
     return util.post("/login", user, vue)
 }
 
+//uploadImage 上传图片
+//method: Post
+//path /docs/image/filter
+//data: { img: img, type: blobInfo.blob.type, name:"" }
+//return: {'url':"http://localhost:8080/public/img/background.0ed615ed.jpg"}
+// @router /image/filter [post]
 function uploadImage(data) {
     let vue = this === undefined || this === window ||!this._isVue? nil:this;
     return util.post('/docs/image/filter', data, vue)
@@ -32,6 +38,9 @@ function changePwdChange(info) {
 }
 
 //获取文章元信息
+//{"id":"first","title":"first","subTitle":"blog",
+// "tags":["blog","document"],"attr":0,"lastTime":"",
+// "abstract":"PHA+Zmlyc3Q8L3A+"},
 function getDocsList(info) {
     console.log("api, 获取文章元信息");
     let vue = this === undefined || this === window ||!this._isVue? nil:this;
@@ -39,8 +48,8 @@ function getDocsList(info) {
 }
 
 /*
-* info: {id: '/doc0'}
-* data: {content: '文章'}  or {error: '...'}
+* info: {doc: '/doc0'}
+* data: string
 * */
 function getDoc(info) {
     console.log("api, 获取文章内容");
@@ -113,6 +122,17 @@ function getImageList({start,limit}) {
     return util.get('/docs/image/filter',{start:start,limit:limit},vue)
 }
 
+//DeleteDoc 删除文章
+//method: DELETE
+//path /docs/doc/filter
+//data {"id":"/doc1"}
+//return 200
+// @router /doc/filter [delete]
+function deleteDoc(id) {
+    console.log("api, 删除文章");
+    let vue = this === undefined || this === window ||!this._isVue? nil:this;
+    return util.delete('/docs/doc/filter',{id:id},vue)
+}
 
 //导出 default的含义
 export default {
@@ -130,6 +150,7 @@ export default {
         vue.prototype.$_addTag = addTag;
         vue.prototype.$_getAuthorInfo = getAuthorInfo;
         vue.prototype.$_getImageList = getImageList
+        vue.prototype.$_deleteDoc = deleteDoc
     },
     login,
     changeBaseInfo,
@@ -141,5 +162,6 @@ export default {
     postDoc,
     getTags, addTag,
     getAuthorInfo,
-    getImageList
+    getImageList,
+    deleteDoc
 }

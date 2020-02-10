@@ -4,16 +4,8 @@
         <el-form ref="baseInfoForm" label-width="80px" status-icon :model="this" :rules="rules">
             <el-divider class="line" content-position="left">个人信息</el-divider>
             <div id="owner-info">
-                <el-upload
-                        class="avatar-uploader"
-                        action="https://jsonplaceholder.typicode.com/posts/"
-                        :show-file-list="false"
-                        @success="this.handleAvatarSuccess"
-                        @error="this.avatarError"
-                        :before-upload="this.beforeAvatarUpload">
-                    <img v-if="this.avatar" :src="this.avatar" class="avatar">
-                    <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-                </el-upload>
+                <painter-image :default="this.avatar" commit="true"
+                        :callback="avatarCallback"></painter-image>
                 <div>
                     <el-form-item label="个人邮箱" prop="mail">
                         <span>用于发送告警邮件及其它通知, 建议填写, 如: example@163.com.</span>
@@ -80,8 +72,7 @@
 <script>
     import vue from 'vue'
     import api from '../api/rpc'
-    import message from "../api/message";
-    vue.use(message);
+    import painterImage from './Image'
     vue.use(api);
     import {
         Form, FormItem, Select, Option, OptionGroup,
@@ -106,6 +97,7 @@
 
     export default {
         name: "painter-setting",
+        components :{painterImage},
         data() {
             return {
                 pwd: '',
@@ -216,6 +208,11 @@
             },
         },
         methods: {
+            avatarCallback(img){
+                console.log("回调函数设置avatar"+img.src)
+                this.avatar = img.src
+
+            },
             submitForm(name) {
                 switch (name) {
                     case  'baseInfoForm':
@@ -277,24 +274,6 @@
                 }
             },
         },
-        avatarError() {
-            this.$refs['avatar'].src = `${this.baseUrl}/static/avatar.jpeg`
-        },
-        handleAvatarSuccess(res, file) {
-            this.avatar = URL.createObjectURL(file.raw);
-        },
-        beforeAvatarUpload(file) {
-            const supportType = ['image/jpeg','image/png','image/gif'].indexOf(file.type) > -1
-            const sizeLimit = file.size / 1024 / 1024 < 3;
-
-            if (!supportType) {
-                message.message(this,'Only support jpeg/png/gif','warning');
-            }
-            if (!sizeLimit) {
-                message.message(this,'Image size limit: 3MByte','warning');
-            }
-            return supportType && sizeLimit;
-        },
     }
 </script>
 
@@ -318,21 +297,6 @@
         border-color: #409EFF;
     }
 
-    .avatar-uploader-icon {
-        font-size: 28px;
-        color: #8c939d;
-        width: 178px;
-        height: 178px;
-        line-height: 178px;
-        text-align: center;
-    }
-
-    .avatar {
-        width: 178px;
-        height: 178px;
-        display: block;
-    }
-
     #owner-info {
         display: flex;
         flex-wrap: wrap;
@@ -341,6 +305,8 @@
     .setting {
         margin: 3em auto;
         max-width: 990px;
+        overflow-y: scroll;
+        height: 100%;
     }
 
 

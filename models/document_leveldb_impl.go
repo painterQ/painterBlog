@@ -116,6 +116,122 @@ func (ddb *DocumentLevelDB) Close() {
 	_ = ddb.db.Close()
 }
 
+func (ddb *DocumentLevelDB) DeleteDoc(key []byte) (err error) {
+	tx, err := ddb.db.OpenTransaction()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			tx.Discard()
+		} else {
+			err = tx.Commit()
+		}
+	}()
+	value, err := tx.Get(addMatePrefix(key), nil)
+	if err != nil {
+		return
+	}
+	mate := new(DocumentMate)
+	err = mate.Decode(value)
+	if err != nil {
+		return
+	}
+	for i := range mate.Tags { //Traverse the tag, delete the corresponding doc key
+		tagValue, gerr := tx.Get(addTagPrefix(mate.Tags[i]), nil)
+		if gerr != nil {
+			continue
+		}
+		s := bytes.Split(tagValue, []byte{'|'})  //删除后可能存在没有被doc引用的tag
+		s = removeFromByteSlice(s,[]byte(mate.Tags[i]))
+		err = tx.Put(addTagPrefix(mate.Tags[i]),bytes.Join(s, []byte{'|'}),nil)
+		if err != nil{
+			return
+		}
+	}
+	err = tx.Delete(addMatePrefix(key), nil)
+	if err != nil{
+		return
+	}
+	err = tx.Delete(addDocPrefix(key), nil)
+	if err != nil{
+		return
+	}
+	return
+}
+
+func (ddb *DocumentLevelDB)RemoveTag(tagKey string) (err error){
+	tx, err := ddb.db.OpenTransaction()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			tx.Discard()
+		} else {
+			err = tx.Commit()
+		}
+	}()
+	tagValue, err := tx.Get(addTagPrefix(tagKey), nil)
+	if err != nil {
+		return
+	}
+	s := bytes.Split(tagValue, []byte{'|'})  //删除后可能存在没有被doc引用的tag
+	for i:= range s{
+		mateValue, gerr := tx.Get(addMatePrefix(s[i]),nil)
+		if gerr !=nil{
+			continue
+		}
+		mate := new(DocumentMate)
+		err = mate.Decode(mateValue)
+		if err != nil{
+			continue
+		}
+		mate.Tags = removeFromStringSlice(mate.Tags,tagKey)
+		newValue ,merr := mate.Encode()
+		if merr != nil{
+			err = merr
+			return
+		}
+		err = tx.Put(addMatePrefix(s[i]),newValue,nil)
+		if err != nil{
+			return
+		}
+	}
+	err = tx.Delete(addTagPrefix(tagKey), nil)
+	return
+}
+
+func removeFromByteSlice(in [][]byte, key []byte) [][]byte {
+	find := 0
+	if len(in) == 0{
+		return in
+	}
+	for i := range in {
+		if len(in[i]) > 0 && bytes.Equal(in[i], key) {
+			find++
+			continue
+		}
+		in[i-find] = in[i]
+	}
+	return in[:len(in)-find]
+}
+
+func removeFromStringSlice(in []string, key string) []string {
+	find := 0
+	if len(in) == 0{
+		return in
+	}
+	for i := range in {
+		if len(in[i]) > 0 && in[i] == key {
+			find++
+			continue
+		}
+		in[i-find] = in[i]
+	}
+	return in[:len(in)-find]
+}
+
 func (ddb *DocumentLevelDB) GetMate(key []byte, length int) ([]byte, error) {
 	//todo get all
 	key = nil
@@ -171,7 +287,7 @@ func (ddb *DocumentLevelDB) GetDocumentByTag(tag []string) []string {
 	}
 
 	setAll := set.New(set.NonThreadSafe)
-	v1, err1 := ddb.db.Get(addTagPrefix([]byte(tag[0])), nil)
+	v1, err1 := ddb.db.Get(addTagPrefix(tag[0]), nil)
 	if err1 != nil {
 		return nil
 	}
@@ -181,7 +297,7 @@ func (ddb *DocumentLevelDB) GetDocumentByTag(tag []string) []string {
 	}
 
 	for i := 1; i < len(tag); i++ {
-		v, err := ddb.db.Get(addTagPrefix([]byte(tag[i])), nil)
+		v, err := ddb.db.Get(addTagPrefix(tag[i]), nil)
 		if err != nil {
 			continue
 		}
@@ -230,7 +346,7 @@ func (ddb *DocumentLevelDB) Push(content []byte, mate *DocumentMate) (err error)
 	}
 
 	for i := range mate.Tags {
-		tagKey := addTagPrefix([]byte(mate.Tags[i]))
+		tagKey := addTagPrefix(mate.Tags[i])
 		ret, _ := tx.Has(tagKey, nil)
 		var v []byte
 		if ret { //tag 已经存在
@@ -256,11 +372,10 @@ func (ddb *DocumentLevelDB) Push(content []byte, mate *DocumentMate) (err error)
 func (ddb *DocumentLevelDB) AddTag(t []string) error {
 	batch := new(leveldb.Batch)
 	for i := range t {
-		tag := []byte(t[i])
-		if len(tag) == 0 {
+		if len(t[i]) == 0 {
 			continue
 		}
-		batch.Put(addTagPrefix(tag), tag)
+		batch.Put(addTagPrefix(t[i]), []byte(t[i]))
 	}
 	return ddb.db.Write(batch, nil)
 }
@@ -298,6 +413,6 @@ func addDocPrefix(key []byte) []byte {
 	return bytes.Join([][]byte{docPreFix, key}, nil)
 }
 
-func addTagPrefix(key []byte) []byte {
-	return bytes.Join([][]byte{tagPreFix, key}, nil)
+func addTagPrefix(key string) []byte {
+	return bytes.Join([][]byte{tagPreFix, []byte(key)}, nil)
 }

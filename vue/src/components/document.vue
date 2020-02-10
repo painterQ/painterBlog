@@ -3,13 +3,13 @@
         <el-divider class="line" content-position="left">撰写文章</el-divider>
         <el-form ref="form" label-width="80px" id="tinymce-editor-form">
             <div class="operation-flex-container">
-                <el-button id="release" @click="this.release">发布</el-button>
+                <el-button @click="this.release">发布</el-button>
                 <el-button id="save">保存草稿</el-button>
-                <el-button id="delete">删除</el-button>
+                <el-button @click="this.clear">清空编辑器</el-button>
                 <el-button id="more" @click="this.more">更多选项</el-button>
                 <el-input type="text" placeholder="请输入标题"
                           id="title" maxlength="30" show-word-limit
-                          v-model="title"/>
+                          v-model="title"></el-input>
             </div>
             <el-input type="text" id="path" v-model="path" class="editor-input"
                       placeholder="请输入路径">
@@ -27,6 +27,15 @@
                 :visible.sync="drawer"
                 :with-header="false">
             <el-form class="document-drawer">
+                <el-switch
+                        v-model="top"
+                        active-text="置顶">
+                </el-switch>
+                <p style="margin: 0">副标题</p>
+                <el-input type="text" :rows="2" v-model="subTitle"
+                          placeholder="副标题">
+                </el-input>
+                <hr/>
                 <p style="margin: 0">标签</p>
                 <el-select v-model="tag" multiple placeholder="选择标签" class="document-drawer-input">
                     <el-option
@@ -35,7 +44,6 @@
                             :value="tag">
                     </el-option>
                 </el-select>
-
                 <el-input type="text" v-model="newTag" class="document-drawer-input"
                           placeholder="新建tag" maxlength="10"
                           show-word-limit>
@@ -48,6 +56,10 @@
                 <el-input type="textarea" :rows="6" v-model="abstract"
                           placeholder="请输入摘要">
                 </el-input>
+                <hr v-if="showDelete"/>
+                <el-button v-if="showDelete" @click="deleteCurrentDoc" type="danger">
+                    删除文章
+                </el-button>
             </el-form>
         </el-drawer>
     </div>
@@ -66,20 +78,25 @@
     import 'tinymce/plugins/table'// 插入表格插件
     import 'tinymce/plugins/lists'// 列表插件
     import 'tinymce/plugins/wordcount'// 字数统计插件
-    import {Drawer, Tag} from "element-ui";
+    import {Drawer, Tag, Button, Dialog, MessageBox} from "element-ui";
+    import axios from "axios";
 
     Vue.use(api);
     Vue.use(message);
     Vue.use(Drawer);
     Vue.use(Tag);
+    Vue.use(Button);
+    Vue.use(Dialog);
     export default {
         components: {
             Editor,
         },
         props: {
             value: {
-                type: String,
-                default: ''
+                type: Object,
+                default() {
+                    return null
+                }
             },
             // 基本路径，默认为空根目录，如果你的项目发布后的地址为目录形式，
             // 即abc.com/tinymce，baseUrl需要配置成tinymce，不然发布后资源会找不到
@@ -105,7 +122,7 @@
                 drawer: false,
                 init: {
                     //todo 这里路径里的sttic导致移植性变差
-                    language_url: `${this.baseUrl}/static/tinymce/langs/zh_CN.js`,
+                    //language_url: `${this.baseUrl}/static/tinymce/langs/zh_CN.js`,
                     language: 'zh_CN',
                     skin_url: `${this.baseUrl}/static/tinymce/skins/ui/oxide`,
                     content_css: `${this.baseUrl}/static/tinymce/skins/content/default/content.css`,
@@ -135,36 +152,28 @@
                     // 此处为图片上传处理函数，这个直接用了base64的图片形式上传图片，
                     // 如需ajax上传可参考https://www.tiny.cloud/docs/configure/file-image-upload/#images_upload_handler
                     images_upload_handler: (blobInfo, success, failure) => {
-                        (async () => {
-                            let file = blobInfo.blob()
-                            let type = file.type;
-                            if (type !== "image/png" && type !== "image/jpeg" && type !== "image/gif") {
-                                failure("support png、jpeg、gif");
-                                return
-                            }
-
-                            let fileName = blobInfo.filename()
-                            if (fileName.length > 64) {
-                                failure("文件名称不要长于64");
-                                return
-                            }
-                            //"data:" + type + ";base64," +
-                            let res = await api.uploadImage({
-                                img:  blobInfo.base64(),
-                                type: type,
-                                name: fileName,
-                            });
-                            if (!res || !res.data || !res.data.url) {
-                                failure();
-                                return
-                            }
-                            success(res.data.url)
-                        })()
-
+                        let file = blobInfo.blob()
+                        let type = file.type;
+                        if (type !== "image/png" && type !== "image/jpeg" && type !== "image/gif") {
+                            failure("support png、jpeg、gif");
+                            return
+                        }
+                        let param = new FormData(); //创建form对象
+                        param.append('avatar', file);//通过append向form对象添加数据
+                        let config = {
+                            headers: {'Content-Type': 'multipart/form-data'}
+                        };
+                        axios.post('http://localhost:8080/docs/image/filter', param, config)
+                            .then(response => {
+                                let res = response.data.list[0]
+                                success(response.data.webDN + "/" + res.src)
+                            })
                     },
 
                 },
                 title: '',
+                subTitle: '',
+                top: false,
                 path: '',
                 myValue: '',
                 abstract: '',
@@ -172,6 +181,8 @@
                 tag: [], //本次选择的tag
                 commonTags: [], //常用的tag
                 allowedFileTypes: ["image/png", "image/jpeg", "image/gif"],
+
+                showDelete : false
             }
         },
         methods: {
@@ -186,13 +197,42 @@
                     path: this.path,
                     abstract: this.abstract,
                     tag: this.tag,
+                    attr: this.top?1:0,
+                    subTitle: this.subTitle,
                     document: this.myValue,
                 });
                 message.message(this, "发布成功", 'success');
             },
             // 可以添加一些自己的自定义事件，如清空内容
             clear() {
-                this.myValue = ''
+                this.myValue = '';
+                this.title = '';
+                this.path = '';
+                this.abstract = '';
+                this.newTag = "";
+                this.tag = [];
+                this.top = false;
+                this.subTitle = "";
+            },
+            async deleteCurrentDoc(){
+                try{
+                    await MessageBox.confirm('此操作将永久删除《'+this.title+'》, 是否继续?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    });
+                    await this.$_deleteDoc(this.path)
+                    console.log("now list",this.list,this.path)
+                    this.showDelete = false;
+                    this.clear();
+                    message.message(this,'删除成功!','success');
+                }catch (e) {
+                    console.log(e)
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                }
             },
             more() {
                 this.drawer = true
@@ -211,10 +251,26 @@
             }
         },
         async mounted() {
-            let self = this
+            let self = this;
             //获取常用tag get /docs/tag
-            let res = await this.$_getTags()
-            self.commonTags = res.data
+            let res = await this.$_getTags();
+            self.commonTags = res.data;
+
+            //todo 复用
+            if(this.$store.state.currentDoc != null){
+                let doc = this.$store.state.currentDoc
+                this.$store.commit("changeCurrentDoc", null)
+                this.showDelete = true
+                this.title = doc.title;
+                this.path = doc.id;
+                this.abstract = doc.abstract;
+                this.tag = doc.tags;
+                this.top = doc.attr === 1;
+                this.subTitle = doc.subTitle;
+                this.$_getDoc({doc: doc.id}).then((res)=>{
+                    this.myValue = res.data
+                })
+            }
         }
     }
 </script>
@@ -223,6 +279,8 @@
     #document {
         max-width: 1024px;
         margin: 3em auto;
+        overflow-y: scroll;
+        height: 100%;
     }
 
     .operation-flex-container {

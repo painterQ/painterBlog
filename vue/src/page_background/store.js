@@ -16,16 +16,17 @@ const store = new Vuex.Store({
             subTitle: '',
             motto: '',
             IPC: '',
-        }
+        },
+        tagList: [],
+
+        currentDoc: null
     },
 
     mutations: {
-        changeIndex: (state, index) => {
-            state.viewState.index = index
+        changeCurrentDoc:(state, doc)=>{
+            state.currentDoc = doc
         },
-        changeAsideSwitch: state => {
-            state.viewState.asideSwitch = !state.viewState.asideSwitch;
-        },
+
         changeLogin: (state, b) => {
             state.login = b
         },

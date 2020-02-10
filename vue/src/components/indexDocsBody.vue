@@ -22,9 +22,6 @@
             <el-button @click="prevDoc">上一篇</el-button>
             <el-button style="float:right;" @click="nextDoc">下一篇</el-button>
             <div class="coffee">赏</div>
-            <div class="share">
-                <a class="el-icon-eleme"></a>
-            </div>
         </div>
     </div>
 </template>
@@ -105,15 +102,6 @@
         border-radius: 50%;
         background: #fccd60;
         background: linear-gradient(to bottom, #fccd60 0, #fbae12 100%, #2989d8 100%, #207cca 100%);
-    }
-
-    .tag-tital {
-
-    }
-
-    .tag-tital:before {
-        content: "\f02e";
-        margin-right: 0.5em;
     }
 
 

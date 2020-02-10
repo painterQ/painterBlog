@@ -26,7 +26,7 @@ func (a *Author)Close(confPath string) {
 //MarshalJSON Marshaler
 //{title: "Painter Qiao",
 //          subTitle: "for dear & love",
-//          avatar: "./avatar.jpeg",
+//          avatar: "http://.../avatar.jpeg",
 //          lastLogin: 123213213,
 //          name: "Painter Qiao",
 //			ipc: "",
@@ -36,7 +36,7 @@ func (a *Author)Close(confPath string) {
 func (a *Author) MarshalJSON(webDN string) ([]byte, error) {
 	nc := a.config.GetNormalConfig()
 	li := a.config.GetLastLogin()
-	nc.Avatar = strings.Join([]string{webDN,"static",nc.Avatar},"/")
+	nc.Avatar = strings.Join([]string{webDN, nc.Avatar},"/")
 	s := fmt.Sprintf(`{"title":"%s","subTitle":"%s","name":"%s","say":"%s","ipc":"%s","github":"%s","avatar":"%s","lastLogin": %d,"email":"%s"}`,
 		nc.Title, nc.SubTitle, nc.Name, nc.Say, nc.IPC, nc.Github, nc.Avatar, li.Unix(), nc.Email)
 	return []byte(s), nil

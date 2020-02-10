@@ -16,6 +16,8 @@ type DocumentDataBase interface {
 	Push(content []byte, mate *DocumentMate) (err error)
 	//tag
 	GetTag() []string
+	//delete
+	DeleteDoc(key []byte) error
 	AddTag([]string) error
 }
 

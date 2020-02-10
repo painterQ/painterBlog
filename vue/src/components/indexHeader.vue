@@ -19,9 +19,9 @@
         <div class="index-header-title-all">
             <div class="index-header-title-center">
                 <painter-tag v-for="t in $store.state.headerTags" :key="t">{{t}}</painter-tag>
-                <h1 class="index-header-title">{{$store.state.headerTitle}}</h1>
-                <h2 class="index-header-subtitle">{{$store.state.headerSubTitle}}</h2>
-                <span class="meta">{{$store.state.headerName}} on {{new Date($store.state.headerTime) | moment}}</span>
+                <h1 class="index-header-title mix">{{$store.state.headerTitle}}</h1>
+                <h2 class="index-header-subtitle mix">{{$store.state.headerSubTitle}}</h2>
+                <span class="meta mix">{{$store.state.headerName}} on {{new Date($store.state.headerTime) | moment}}</span>
             </div>
         </div>
     </div>
@@ -57,7 +57,7 @@
                 document.body.scrollTop = 0;
             },
             avatarError() {
-                //todo
+                console.log("avatar Error");
                 return true
             },
         },
@@ -75,7 +75,7 @@
         },
         computed: {
             avatar() {
-                console.log("get avatar", this.$store.state.authorAvatar)
+                console.log("get avatar", this.$store.state.authorAvatar);
                 return this.$store.state.authorAvatar
             }
         },
@@ -94,9 +94,12 @@
     }
 
     .index-header-title-center {
-        mix-blend-mode: difference;
         margin: 2em auto;
         width: 50%;
+    }
+
+    .mix{
+        mix-blend-mode: difference;
     }
 
     .meta {

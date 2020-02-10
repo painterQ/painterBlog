@@ -4,7 +4,7 @@ el-container el-aside el-header el-footer
 --->
 <template>
     <el-container class="container">
-        <el-header class="header">
+        <el-header class="header" height="50px">
             <painter-header></painter-header>
             <painter-login></painter-login>
         </el-header>
@@ -86,9 +86,9 @@ el-container el-aside el-header el-footer
 
     .main {
         padding: 0;
+        height: calc(100vh - 50px);
+        overflow-y: hidden;
         background-color: #fafafa;
-        overflow-y: auto;
-        overflow-x: hidden;
         box-sizing: border-box;
 
     }
@@ -107,3 +107,26 @@ el-container el-aside el-header el-footer
     }
 </style>
 <!-- Add "scoped" attribute to limit CSS to this component only -->
+<style>
+    .manage-card {
+        border-radius: 4px;
+        width: 100%;
+        overflow-y: hidden;
+        /*padding: 1em;*/
+        /*margin: 6px 30px;*/
+        background-color: #fff;
+        box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+        box-sizing: border-box;
+    }
+
+    .manage-card:hover {
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        position: relative;
+        top: 1px;
+    }
+
+    .manage-card > * {
+        display: block;
+        cursor: pointer;
+    }
+</style>

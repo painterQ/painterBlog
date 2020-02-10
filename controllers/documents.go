@@ -1,15 +1,15 @@
 package controllers
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 	"github.com/painterQ/painterBlog/models"
+	"github.com/painterQ/painterBlog/models/imageStore"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -25,9 +25,10 @@ func (d *DocumentsController) URLMapping() {
 	d.Mapping("GetDocumentsIDByTags", d.GetDocumentsIDByTags) //get 	/docs/tags
 	d.Mapping("PostNewDocument", d.PostNewDocument)           //post 	/docs/doc/filter	*
 	d.Mapping("AddTag", d.AddTag)                             //post 	/docs/tag/filter	*
+	d.Mapping("DeleteDoc",d.DeleteDoc)						  //delete	/docs/doc/filter	*
 	d.Mapping("GetTags", d.GetTags)                           //get 	/docs/tag
 	d.Mapping("UploadImage", d.UploadImage)                   //post	/docs/image/filter 	*
-	d.Mapping("GetImageList",d.GetImageList)				  //get		/docs/image/filter 	*
+	d.Mapping("GetImageList", d.GetImageList)                 //get		/docs/image/filter 	*
 }
 
 //GetDocument 获取文章内容
@@ -77,6 +78,24 @@ func (d *DocumentsController) GetDocumentsIDByTags() {
 
 }
 
+//DeleteDoc 删除文章
+//method: DELETE
+//path /docs/doc/filter
+//data {"id":"/doc1"}
+//return 200
+// @router /doc/filter [delete]
+func (d *DocumentsController) DeleteDoc(){
+	var para struct {
+		ID  string `json:"id"`
+	}
+	err := json.Unmarshal(d.Ctx.Input.RequestBody, &para)
+	if err != nil {
+		panic(err)
+	}
+	err = models.DocumentDataBaseSingleCase.DeleteDoc([]byte(para.ID))
+	responseJson(d.Ctx, err)
+}
+
 //PostNewDocument 发表文章
 //method: POST
 //path /docs/doc/filter
@@ -89,6 +108,8 @@ func (d *DocumentsController) PostNewDocument() {
 		Path     string   `json:"path"`
 		Abstract string   `json:"abstract"`
 		Tag      []string `json:"tag"`
+		Attr     int      `json:"attr"`
+		SubTitle string   `json:"subTitle"`
 		Document string   `json:"document"`
 	}
 	err := json.Unmarshal(d.Ctx.Input.RequestBody, &para)
@@ -110,10 +131,10 @@ func (d *DocumentsController) PostNewDocument() {
 	err = models.DocumentDataBaseSingleCase.Push(content, &models.DocumentMate{
 		ID:       para.Path,
 		Title:    para.Title,
-		SubTitle: "blog",
+		SubTitle: para.SubTitle,
 		Tags:     para.Tag,
 		LastTime: time.Now().Unix(),
-		Attr:     0,
+		Attr:     para.Attr,
 		Abstract: abs,
 	})
 	if err != nil {
@@ -156,50 +177,42 @@ func (d *DocumentsController) AddTag() {
 	responseJson(d.Ctx, models.DocumentDataBaseSingleCase.AddTag(tag))
 }
 
+var reg, _ = regexp.Compile(`filename="(.+)"`)
+
 //uploadImage 上传图片
 //method: Post
 //path /docs/image/filter
-//data: { img: img, type: blobInfo.blob.type }
-//return: {'url':"http://localhost:8080/public/img/background.0ed615ed.jpg"}
+//data: file binary
+//return:
 // @router /image/filter [post]
 func (d *DocumentsController) UploadImage() {
-	var para struct {
-		Type string `json:"type"` //image/png  image/jpeg   image/jpg
-		// dataURL 'data:image/jpeg;base64,'+base64
-		Img  string `json:"img"`  //base64
-		Name string `json:"name"`
-	}
-	err := json.Unmarshal(d.Ctx.Input.RequestBody, &para)
-	if err != nil {
-		responseJson(d.Ctx, err)
-		return
-	}
-	if len(para.Name) > 64 {
+	f, h, _ := d.GetFile("avatar") //获取上传的文件
+	defer func() {
+		if err := f.Close(); err != nil {
+			logs.Error("close file error: " + err.Error())
+		}
+	}()
+	if len(h.Filename) > 64 {
 		responseJson(d.Ctx, fmt.Errorf("file name is too long"))
 		return
 	}
-	if len(para.Img) > imageSizeLimit {
-		responseJson(d.Ctx, fmt.Errorf("file size bigger then %d bytes", imageSizeLimit/4*3))
-		return
-	}
+	fmt.Println("name；", h.Filename)
 
-	imageData, err := base64.StdEncoding.DecodeString(para.Img)
+	info, err := models.ImageStoreSingleCase.SaveImage(f, h.Filename, nil)
 	if err != nil {
-		responseJson(d.Ctx, fmt.Errorf("parse error"))
+		responseJson(d.Ctx, err)
 		return
 	}
 
-	tmp := strings.Split(para.Type, "/")
-	if len(tmp) != 2 {
-		responseJson(d.Ctx, fmt.Errorf("parse image type error"))
-		return
-	}
-	info,err := models.ImageStoreSingleCase.SaveImage(imageData, para.Name, tmp[1], nil)
-	if err != nil{
-		responseJson(d.Ctx, err)
-	}
-	url := strings.Join([]string{webDN,info.Src}, "/")
-	responseJson(d.Ctx, fmt.Sprintf(`{"url":"%s"}`, url))
+	go func() {
+		img := new(imageStore.ImageInfo)
+		_ = json.Unmarshal(info, img)
+		if d.Ctx.Input.Header("avatar") == "true" {
+			_ = models.AuthorSingleCase.SetAvatar(img.Src)
+		}
+	}()
+
+	responseJson(d.Ctx, imageStore.AddWebDN2ImgArray(webDN, [][]byte{info}))
 }
 
 //GetImageList 获取图片列表
@@ -209,30 +222,24 @@ func (d *DocumentsController) UploadImage() {
 //return: [{"id":"","name":"","type":"","src":"",}]
 // @router /image/filter [get]
 func (d *DocumentsController) GetImageList() {
-	start,err := strconv.Atoi(d.Input().Get("start"))
-	if err != nil{
-		responseJson(d.Ctx, fmt.Errorf("parameter [start] error:"+err.Error() ))
+	start, err := strconv.Atoi(d.Input().Get("start"))
+	if err != nil {
+		responseJson(d.Ctx, fmt.Errorf("parameter [start] error:"+err.Error()))
 		return
 	}
-	limit,err := strconv.Atoi(d.Input().Get("limit"))
-	if err != nil{
-		responseJson(d.Ctx, fmt.Errorf("parameter [limit] error:"+err.Error() ))
+	limit, err := strconv.Atoi(d.Input().Get("limit"))
+	if err != nil {
+		responseJson(d.Ctx, fmt.Errorf("parameter [limit] error:"+err.Error()))
 		return
 	}
 	if limit > 20 {
 		responseJson(d.Ctx, fmt.Errorf("parameter [limit] have to little then 20"))
 		return
 	}
-	infos := models.ImageStoreSingleCase.GetAllImageInfo(int64(start),int64(limit))
-	for i:= range infos{
-		infos[i].Src = strings.Join([]string{webDN,infos[i].Src}, "/")
-	}
-	fmt.Println(start,limit,infos)
-
-	response,err := json.Marshal(infos)
-	if err != nil{
-		responseJson(d.Ctx, err)
+	infos := models.ImageStoreSingleCase.GetAllImageInfo(webDN, int64(start), int64(start+limit))
+	if infos == nil {
+		responseJson(d.Ctx, errors.New("index error, index start with 1"))
 		return
 	}
-	responseJson(d.Ctx,response)
+	responseJson(d.Ctx, imageStore.AddWebDN2ImgArray(webDN, infos))
 }

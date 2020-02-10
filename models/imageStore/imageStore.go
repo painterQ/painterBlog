@@ -2,18 +2,21 @@ package imageStore
 
 import (
 	"bytes"
-	"encoding/asn1"
+	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego/logs"
+	"github.com/nfnt/resize"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"image"
-	_ "image/gif"
-	_ "image/jpeg"
-	_ "image/png"
+	"image/gif"
+	"image/jpeg"
+	"image/png"
+	"io"
 	"math/big"
 	"os"
 	"path"
@@ -24,20 +27,22 @@ var one = big.NewInt(1)
 var zero = big.NewInt(0)
 
 type ImageInfo struct {
-	ID   []byte	`json:"id"`
-	Name string	`json:"name"`
-	Type string	`json:"type"`
-	Src  string	`json:"src"`
-	//todo 缩略图
+	ID     []byte `json:"id"`
+	Name   string `json:"name"`
+	Type   string `json:"type"`
+	Src    string `json:"src"`
+	Small  []byte `json:"small,omitempty"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
 }
 
 type ImageStore interface {
 	Release()
 	GetImageByID(id []byte) *ImageInfo
 	GetImageByName(name []byte) []byte
-	GetAllImageInfo(s, e int64) []*ImageInfo
+	GetAllImageInfo(webAddr string, s, e int64) [][]byte
 	//SaveImage, if id is nil, use a random id
-	SaveImage(data []byte, name, imageType string, id []byte) (*ImageInfo, error)
+	SaveImage(data io.Reader, name string, id []byte) ([]byte, error)
 	RemoveImage(id []byte) error
 }
 
@@ -88,7 +93,7 @@ func openDB(path string, ErrorIfExist bool, flagOld *bool) *leveldb.DB {
 func New(mateDBPath, imagePath, globalDBPath string) ImageStore {
 	flagOld := false
 	db := openDB(path.Join(globalDBPath, mateDBPath), true, &flagOld)
-	if db == nil{
+	if db == nil {
 		return nil
 	}
 	ret := &levelDBImpl{
@@ -103,7 +108,7 @@ func New(mateDBPath, imagePath, globalDBPath string) ImageStore {
 		}
 	} else {
 		ierr := ret.UpdateIndexFormDb()
-		fmt.Println("### init index with "+ ret.index.Text(10))
+		fmt.Println("### init index with " + ret.index.Text(10))
 		if ierr != nil {
 			panic("init ImageStore error:" + ierr.Error())
 		}
@@ -137,7 +142,7 @@ func (i *levelDBImpl) GetImageByID(id []byte) *ImageInfo {
 		return nil
 	}
 	tmp := new(ImageInfo)
-	_, err = asn1.Unmarshal(v, tmp)
+	err = json.Unmarshal(v, tmp)
 	if err != nil {
 		return nil
 	}
@@ -148,11 +153,14 @@ func (i *levelDBImpl) GetImageByName(name []byte) []byte {
 	panic("implement me")
 }
 
-func (i *levelDBImpl) GetAllImageInfo(s, e int64) []*ImageInfo {
+func (i *levelDBImpl) GetAllImageInfo(webAddr string, s, e int64) [][]byte {
 	if e < s {
 		s, e = e, s
 	}
-	ret := make([]*ImageInfo, 0, e-s)
+	if s < 1{
+		return nil
+	}
+	ret := make([][]byte, 0, e-s)
 	iter := i.db.NewIterator(&util.Range{
 		Start: big.NewInt(s).Bytes(),
 		Limit: big.NewInt(e).Bytes(),
@@ -160,12 +168,9 @@ func (i *levelDBImpl) GetAllImageInfo(s, e int64) []*ImageInfo {
 	defer iter.Release()
 	for iter.Next() {
 		v := iter.Value()
-		tmp := new(ImageInfo)
-		_, ierr := asn1.Unmarshal(v, tmp)
-		if ierr != nil {
-			continue
-		}
-		ret = append(ret, tmp)
+		buf := make([]byte,len(v))
+		copy(buf,v)
+		ret = append(ret, buf)
 	}
 	return ret
 }
@@ -203,56 +208,95 @@ func (i *levelDBImpl) UpdateIndexFormDb() error {
 	return nil
 }
 
-func (i *levelDBImpl) SaveImage(data []byte, name, imageType string, id []byte) (*ImageInfo, error) {
-	//check image
-	_, n, e := image.Decode(bytes.NewBuffer(data))
-	if n != imageType || e != nil { //png jpeg gif
-		return nil, errors.New("image type error")
+func getSmallerChan(width uint, t string, img image.Image) chan *bytes.Buffer {
+	ret := make(chan *bytes.Buffer, 1)
+	go func() {
+		m := resize.Resize(width, 0, img, resize.Lanczos3)
+		buf := new(bytes.Buffer)
+		switch t {
+		case "jpeg":
+			_ = jpeg.Encode(buf, m, &jpeg.Options{Quality: 50})
+		case "png":
+			_ = (&png.Encoder{CompressionLevel: png.BestSpeed}).Encode(buf, m)
+		case "gif":
+			_ = gif.Encode(buf, m, nil)
+		}
+		ret <- buf
+	}()
+	return ret
+}
+
+func (i *levelDBImpl) SaveImage(data io.Reader, name string, id []byte) (JSON []byte, err error) {
+	//open a temp file
+	nonce := make([]byte, 32)
+	_, _ = rand.Read(nonce)
+	var imgInfo *ImageInfo = nil
+	tempName := path.Join(i.globalDBPath, hex.EncodeToString(nonce))
+	file, err := os.OpenFile(tempName, os.O_CREATE|os.O_RDWR|os.O_EXCL, 0666)
+	if err != nil {
+		return nil, errors.New("write to file error:" + err.Error())
 	}
+
+	//check image and write to temp file
+	img, n, err := image.Decode(io.TeeReader(data, file))
+	_ = file.Close()
+	if err != nil { //png jpeg gif
+		return nil, errors.New("image type error：" + err.Error())
+	}
+
+	size := img.Bounds().Size()
+	var smallerChan chan *bytes.Buffer
+	if (size.X > 200 || size.Y > 200) && n != "gif"{
+		smallerChan = getSmallerChan(200, n, img)
+	}
+
+
+	//handle error
+	absPath := ""
+	defer func() {
+		if err == nil && imgInfo != nil && JSON != nil && absPath != "" {
+			_ = os.Rename(tempName, absPath)
+		} else {
+			err = fmt.Errorf("store image error: %v", err)
+			_ = os.Remove(tempName)
+		}
+	}()
 
 	//write db
 	if id == nil {
 		id = i.addIndexAtomic().Bytes()
-		fmt.Println("现在image的index是",new(big.Int).SetBytes(id).Text(10))
+		fmt.Println("现在image的index是", new(big.Int).SetBytes(id).Text(10))
 	}
-	src := path.Join(i.imagePath, hex.EncodeToString(id)+"."+imageType)
-	ret := &ImageInfo{
-		ID:   id,
-		Name: name,
-		Type: imageType,
-		Src:  src,
-	}
-	value, _ := asn1.Marshal(*ret)
-	err := i.db.Put(id, value, nil)
-	fmt.Println("db put with id "+ new(big.Int).SetBytes(id).Text(10))
-	if err != nil {
-		return nil, errors.New("db put error:" + err.Error())
+	src := path.Join(i.imagePath, hex.EncodeToString(id)+"."+n)
+	absPath = path.Join(i.globalDBPath, src)
+
+	imgInfo = &ImageInfo{
+		ID:     id,
+		Name:   name,
+		Type:   n,
+		Src:    src,
+		Small:  nil,
+		Width:  size.X,
+		Height: size.Y,
 	}
 
-	//write file
-	absPath := path.Join(i.globalDBPath, src)
-	file, err := os.OpenFile(absPath, os.O_CREATE|os.O_RDWR, 0666)
-	if err != nil {
-		_ = i.db.Delete(ret.ID, nil)
-		return nil, errors.New("write to file error:" + err.Error())
-	}
-	defer func() {
-		_ = file.Close()
-	}()
-
-	_, _ = file.Seek(0, 0)
-	sizeOfFile, err := file.Write(data)
-	if err != nil {
-		_ = i.db.Delete(ret.ID, nil)
-		return nil, errors.New("write to file error:" + err.Error())
-	}
-	err = file.Truncate(int64(sizeOfFile))
-	if err != nil {
-		_ = i.db.Delete(ret.ID, nil)
-		return nil, errors.New("write to file error:" + err.Error())
+	if (size.X > 200 || size.Y > 200) && n != "gif"{
+		imgInfo.Small = (<-smallerChan).Bytes()
 	}
 
-	return ret, nil
+
+	JSON, err = json.Marshal(*imgInfo)
+	if err != nil {
+		return
+	}
+	err = i.db.Put(id, JSON, nil)
+	fmt.Println("db put with id " + new(big.Int).SetBytes(id).Text(10))
+	return
+}
+
+func AddWebDN2ImgArray(webDN string, JSON [][]byte) []byte {
+	array := bytes.Join(JSON, []byte{','})
+	return bytes.Join([][]byte{[]byte(`{"list":[`), array, []byte(`],"webDN":"`), []byte(webDN), []byte(`"}`)}, nil)
 }
 
 func (i *levelDBImpl) RemoveImage(id []byte) error {

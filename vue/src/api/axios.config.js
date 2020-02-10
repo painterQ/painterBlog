@@ -81,7 +81,30 @@ export default {
                 })
         })
     },
-
+    delete(url, param, {$router, $store, $cookies}) {
+        console.log("entry delete")
+        return new Promise((resolve, reject) => {
+            axios({
+                method: 'delete',
+                url,
+                data: param,
+            })
+                .then(res => {
+                    console.log("finish delete")
+                    resolve(res)
+                })
+                .catch(error => {
+                    console.log("delete error",error)
+                    handleError(error.response.status, $router, $store, $cookies);
+                    Message({
+                        message: error.message,
+                        type: "error",
+                        duration: 5000,
+                    });
+                    reject(error)
+                })
+        })
+    },
 }
 
 /*

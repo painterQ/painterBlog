@@ -16,6 +16,7 @@ func responseJson(ctx *context.Context, obj interface{}) {
 		_, _ = ctx.ResponseWriter.Write([]byte{})
 		return
 	}
+	ctx.Output.Header("Content-Type", "application/json; charset=utf-8")
 	switch t := obj.(type) {
 	case int:
 		switch t {

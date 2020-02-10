@@ -92,7 +92,7 @@ class DocListClass {
         let propUp = [];
         let prop = [];
         for (let key in myDocs) {
-            myDocs[key].attr === "top" ? propUp.push(key) : prop.push(key)
+            myDocs[key].attr == "1" ? propUp.push(key) : prop.push(key)
         }
         let sort = (a, b) => {
             if (a === b) return 0;

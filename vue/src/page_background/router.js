@@ -8,7 +8,7 @@ import notFound from "../components/page404"
 import imageManager from "../components/manageImage"
 import tagsManager from "../components/manageTags"
 import docsManager from "../components/manageDocs"
-import backgroundManage from "../components/backgroundManage";
+
 const routes = [
     {
         path: '/',
@@ -23,22 +23,16 @@ const routes = [
         component: tinyMEC
     },
     {
-        path: '/manage',
-        component: backgroundManage,
-        children: [
-            {
-                path: 'docs',
-                component: docsManager
-            },
-            {
-                path: 'image',
-                component: imageManager
-            },
-            {
-                path: 'tags',
-                component: tagsManager
-            }
-        ]
+        path: '/manage/docs',
+        component: docsManager,
+    },
+    {
+        path: '/manage/tags',
+        component: tagsManager
+    },
+    {
+        path: '/manage/image',
+        component: imageManager
     },
     {
         path: '/404',
