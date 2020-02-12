@@ -96,6 +96,17 @@ func (d *DocumentsController) DeleteDoc(){
 	responseJson(d.Ctx, err)
 }
 
+//GetTags 获取全部tag
+//method: GET
+//path /docs/tag
+//para: nil
+//return: {"tag1":["",""],"tag2":["",""],"tag3":[]}
+// @router /tag [get]
+func (d *DocumentsController) GetTags(){
+	m := models.DocumentDataBaseSingleCase.GetTags()
+	responseJson(d.Ctx, m)
+}
+
 //PostNewDocument 发表文章
 //method: POST
 //path /docs/doc/filter
@@ -150,16 +161,6 @@ func getAbstract(s string) string {
 	return r.FindString(s)
 }
 
-//GetTags 获取全部tag
-//method: GET
-//path /docs/tag
-//para: nil
-//return: ["tag1","tag2","tag3"]
-// @router /tag [get]
-func (d *DocumentsController) GetTags() {
-	//todo 403缓存
-	responseJson(d.Ctx, models.DocumentDataBaseSingleCase.GetTag())
-}
 
 //AddTag 新增tag
 //method: Post

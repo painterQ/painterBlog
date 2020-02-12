@@ -14,7 +14,10 @@ el-container el-aside el-header el-footer
                 <painter-aside></painter-aside>
             </el-aside>
             <el-main class="main">
-                <router-view></router-view>
+                <keep-alive>
+                    <router-view v-if="$route.meta.keepAlive"></router-view>
+                </keep-alive>
+                <router-view v-if="!$route.meta.keepAlive"></router-view>
             </el-main>
         </el-container>
     </el-container>
@@ -123,10 +126,7 @@ el-container el-aside el-header el-footer
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         position: relative;
         top: 1px;
-    }
-
-    .manage-card > * {
-        display: block;
         cursor: pointer;
     }
+
 </style>

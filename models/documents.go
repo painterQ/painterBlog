@@ -15,7 +15,7 @@ type DocumentDataBase interface {
 	//相同的key会覆盖
 	Push(content []byte, mate *DocumentMate) (err error)
 	//tag
-	GetTag() []string
+	GetTags() map[string][]string
 	//delete
 	DeleteDoc(key []byte) error
 	AddTag([]string) error

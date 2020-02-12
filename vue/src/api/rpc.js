@@ -69,7 +69,7 @@ function postDoc(info) {
 //method: GET
 //path /docs/tag
 //para: nil
-//return: ["tag1","tag2","tag3"]
+//return: {"tag1":["",""],"tag2":["",""],"tag3":[]}
 // @router /tag [get]
 function getTags() {
     console.log("api, 获取全部tag");

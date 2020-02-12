@@ -380,29 +380,27 @@ func (ddb *DocumentLevelDB) AddTag(t []string) error {
 	return ddb.db.Write(batch, nil)
 }
 
-func (ddb *DocumentLevelDB) GetTag() []string {
-	ret := make([]string, 0, 10)
+func (ddb *DocumentLevelDB) GetTags() map[string][]string {
 	iter := ddb.db.NewIterator(&util.Range{
 		Start: tagPreFix,
 		Limit: nil,
 	}, nil)
 	defer iter.Release()
-	i := 0
 	iter.Next()
+	retMap := make(map[string][]string)
 	for iter.Next() {
-		tmpSplit := bytes.Split(iter.Key(), []byte("::"))
-		if len(tmpSplit) < 2 {
+		tmpKeySplit := bytes.Split(iter.Key(), []byte("::"))
+		if len(tmpKeySplit) < 2 {
 			continue
 		}
-		ret = append(ret, string(tmpSplit[1]))
-		i++
-		if i == len(ret) {
-			tmp := make([]string, len(ret), len(ret)*2)
-			copy(tmp, ret)
-			ret = tmp
+		tmpValueSplit := bytes.Split(iter.Value(), []byte("|"))
+		v := make([]string, len(tmpValueSplit))
+		for i:= range tmpValueSplit{
+			v[i] = string(tmpValueSplit[i])
 		}
+		retMap[string(tmpKeySplit[1])] = v
 	}
-	return ret
+	return retMap
 }
 
 func addMatePrefix(key []byte) []byte {

@@ -140,9 +140,9 @@
                     //换行符会被转换成 br 元素
                     convert_newlines_to_brs: true,
                     //在换行处 TinyMCE 会用 BR 元素而不是插入段落
-                    force_br_newlines: false,
+                    force_br_newlines: true,
                     //当返回或进入 Mozilla/Firefox 时，这个选项可以打开/关闭段落的建立
-                    force_p_newlines: false,
+                    force_p_newlines: true,
                     //这个选项控制是否将换行符从输出的 HTML 中去除。选项默认打开，因为许多服务端系统将换行转换成 <br />，因为文本是在无格式的 textarea 中输入的。使用这个选项可以让所有内容在同一行。
                     remove_linebreaks: false,
                     //不能把这个设置去掉，不然图片路径会出错
@@ -254,7 +254,11 @@
             let self = this;
             //获取常用tag get /docs/tag
             let res = await this.$_getTags();
-            self.commonTags = res.data;
+            let tags = []
+            for(let k in res){
+                tags.push(k)
+            }
+            self.commonTags = tags;
 
             //todo 复用
             if(this.$store.state.currentDoc != null){

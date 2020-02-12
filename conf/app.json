@@ -2,17 +2,17 @@
     "normalConfig": {
         "title": "我的博客",
         "subTitle": "a blog for dear \u0026 love",
-        "name": "painter",
+        "name": "painter Q",
         "say": "a blog for dear \u0026 love",
         "ipc": "浙ICP备19042136号",
         "github": "painterQ",
-        "avatar": "image/2b.png",
+        "avatar": "image/33.jpeg",
         "email": "painterqiao@gmail.com"
     },
     "pwd": {
         "salt": "BWvkNfYXJgrWEMZsk52xr7ipdlyKUF_0LXYyrpVS3M4=",
         "key": "ee8jaYqsxDZ_PiqVxJZl2h9HWFIWnTrQmzjXDD_rMM8="
     },
-    "lastLogin": 1581262879,
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiOjoxIiwiZXhwIjoxNTgxNDM1Njc5LjkxNzA2NywibmJmIjoxNTgxMjYyODc5LjkxNzA2N30.DKJSPSgpn26ipQmaegG6KpcBabNyxYjQV2e4ukVfO38"
+    "lastLogin": 1581479262,
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiOjoxIiwiZXhwIjoxNTgxNjUyMDYyLjk5NjAwNSwibmJmIjoxNTgxNDc5MjYyLjk5NjAwNX0.PRoWTVwBjsFTkj9PIHzPV3745Uw7f76LIBxH74cteIw"
 }

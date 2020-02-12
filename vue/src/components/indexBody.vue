@@ -2,7 +2,7 @@
     <div>
         <div class="index-body-all">
             <index-aside class="index-body-aside">
-                <motto></motto>
+                <introduction></introduction>
             </index-aside>
             <div class="index-body-main">
                 <!--list-->
@@ -37,7 +37,7 @@
     import Vue from 'vue'
     import {Pagination} from "element-ui";
     import indexAside from "@/components/indexAside.vue";
-    import Motto from "./motto";
+    import introduction from "./introduction";
     import PainterTag from "./tag";
 
     Vue.use(Pagination);
@@ -46,7 +46,7 @@
         name: 'index-body',
         components: {
             indexAside,
-            Motto,
+            introduction,
             PainterTag
         },
         data() {

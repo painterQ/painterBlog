@@ -10,27 +10,19 @@
                 <el-button type="primary" @click="editAgain">编 辑</el-button>
             </span>
         </el-dialog>
-        <div class="manage-card card-ex" @click="handleDoc(index)" v-for="(doc, index) in list" :key="index">
-            <h3>{{doc.title}}</h3>
-            <div>{{doc.subTitle}}</div>
-            <div>id:{{doc.id}}</div>
-            <painter-tag v-for="(t,tindex) in doc.tags" :key="tindex">{{t}}</painter-tag>
-            <p>{{doc.abstract}}</p>
-            <div>
-                <span>time: {{new Date(doc.lastTime) | moment}}</span>
-                <span v-if="doc.attr === 1">置顶</span>
-            </div>
-        </div>
+        <doc-card @click.native="handleDoc(index)"
+                  v-for="(doc, index) in list" :key="index" :doc="doc">
+        </doc-card>
     </div>
 </template>
 
 <script>
-    import painterTag from './tag'
+    import DocCard from "./docCard";
 
     export default {
         name: "docs-manager",
         components: {
-            painterTag
+            DocCard,
         },
         computed: {
             getDoc() {
@@ -66,17 +58,12 @@
 
 <style scoped>
     .container {
-        width: 100%;
-        margin: 0.5em;
-        overflow-y: scroll;
-        height: 100%;
-    }
-
-    .card-ex {
-        padding: 0.5em;
-        margin: 0.2em auto;
-        max-width: 900px;
         width: 80%;
-        min-width: 300px;
+        padding: 1em;
+        margin: 1em auto;
+        background-color: white;
+        overflow-y: scroll;
+        display: flex;
+        flex-wrap: wrap;
     }
 </style>

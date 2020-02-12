@@ -1,38 +1,51 @@
 <template>
-    <div class="painter-tags" :style="{color: borderColor}"
-         @click.stop="click($event)"
-         @mouseenter="hover()" @mouseout="hout()">
+    <div class="painter-tags" :style="borderStyle"
+         @mouseenter="_hover()" @mouseout="_hout()">
         <slot></slot>
-   </div>
+    </div>
 </template>
 
 <script>
-    let colorList = ["Blue","BlueViolet" ,
-        "Lime","OrangeRed","Tomato","OliveDrab"];
+    let colorList = ["Blue", "BlueViolet", "Red", "OrangeRed", "Tomato", "OliveDrab"];
     export default {
         name: "painter-tag",
-        data(){
-            return{
-                borderColor: "",
-                tmp: "",
+        props: {
+            selected: {
+                type: Boolean,
+                default: false,
             }
         },
-        mounted() {
-            let r = Math.floor(Math.random() * colorList.length);
-            this.borderColor = colorList[r]
+        data() {
+            return {
+                curveHover: false,
+            }
         },
-        methods:{
-            click(e){
-                var eventdom = e.target;
-                console.log("click tag", eventdom.innerHTML)
+        computed: {
+            borderStyle() {
+                if (this.selected || this.curveHover) {
+                    return {
+                        backgroundColor: 'darkgray',
+                        fontStyle: 'normal',
+                        color: "#ffffff",
+                    };
+                }
+                let r = Math.floor(Math.random() * colorList.length);
+                return {
+                    color: colorList[r],
+                };
             },
-            hover(){
-                this.tmp = this.borderColor
-                this.borderColor = "#ffffff"
+        },
+        methods: {
+            _hover() {
+                this.curveHover = true
             },
-            hout(){
-                this.borderColor = this.tmp
+            _hout() {
+                this.curveHover = false
             },
+            select(v) {
+                console.log("change selected", v)
+                this.selected = Boolean(v)
+            }
         }
     }
 </script>
@@ -47,10 +60,5 @@
         font-size: 12px;
         text-decoration: none;
         margin: 2px;
-    }
-
-    .painter-tags:hover{
-        background-color: darkgray;
-        font-style: normal;
     }
 </style>

@@ -149,7 +149,7 @@
 
     .index-body-aside {
         border-left: rgba(88, 88, 88, 0.1) 1px solid;
-        margin: 0 0 0 1em;
+        margin: 2em 0 0 1em;
         flex-grow: 1;
         max-width: 10em;
         /*top: 10px;*/

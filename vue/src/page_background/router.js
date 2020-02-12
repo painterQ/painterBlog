@@ -16,11 +16,17 @@ const routes = [
     },
     {
         path: '/home',
-        component: painterSetting
+        component: painterSetting,
+        meta: {
+            keepAlive: true
+        }
     },
     {
         path: '/document',
-        component: tinyMEC
+        component: tinyMEC,
+        meta: {
+            keepAlive: true
+        }
     },
     {
         path: '/manage/docs',
@@ -28,11 +34,14 @@ const routes = [
     },
     {
         path: '/manage/tags',
-        component: tagsManager
+        component: tagsManager,
     },
     {
         path: '/manage/image',
-        component: imageManager
+        component: imageManager,
+        meta: {
+            keepAlive: true
+        }
     },
     {
         path: '/404',
