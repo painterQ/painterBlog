@@ -1,18 +1,35 @@
 {
     "normalConfig": {
-        "title": "我的博客",
+        "title": "枫桥夜泊",
         "subTitle": "a blog for dear \u0026 love",
         "name": "painter Q",
         "say": "a blog for dear \u0026 love",
         "ipc": "浙ICP备19042136号",
         "github": "painterQ",
-        "avatar": "image/33.jpeg",
+        "avatar": "image/01.jpeg",
         "email": "painterqiao@gmail.com"
     },
     "pwd": {
         "salt": "BWvkNfYXJgrWEMZsk52xr7ipdlyKUF_0LXYyrpVS3M4=",
         "key": "ee8jaYqsxDZ_PiqVxJZl2h9HWFIWnTrQmzjXDD_rMM8="
     },
-    "lastLogin": 1581479262,
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiOjoxIiwiZXhwIjoxNTgxNjUyMDYyLjk5NjAwNSwibmJmIjoxNTgxNDc5MjYyLjk5NjAwNX0.PRoWTVwBjsFTkj9PIHzPV3745Uw7f76LIBxH74cteIw"
+    "lastLogin": 1581566032,
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiOjoxIiwiZXhwIjoxNTgxNzM4ODMyLjU1MTY2NywibmJmIjoxNTgxNTY2MDMyLjU1MTY2N30.8ODICThwzt_-4r1bPdwcTN8_pBABkBatv4vqDF0wDFM",
+    "friendLinks": [
+        {
+            "name": "github",
+            "url": "https://www.github.com",
+            "header": true
+        },
+        {
+            "name": "百度",
+            "url": "https://www.baidu.com",
+            "header": false
+        },
+        {
+            "name": "知乎",
+            "url": "https://www.zhihu.com",
+            "header": false
+        }
+    ]
 }

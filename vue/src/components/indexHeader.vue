@@ -1,17 +1,18 @@
 <template>
     <div class="header-container">
         <transition name="fade">
-            <div class="header-bar" :style="bc" v-if="showBar">
+            <div class="header-bar" :style="bc" v-show="showBar">
                 <div class="header-bar-inner-wrapper">
                     <el-avatar
+                            ref="avatar"
+                            class="avatar-before"
                             shape="circle"
                             :size="40"
                             fit="contain"
                             :src="avatar"
-                            @error="avatarError"></el-avatar>
-                    <a @click="aboutMe(true)" class="bar_fount">关于我</a>
-                    <router-link to="/tag" class="bar_fount">标签</router-link>
-                    <router-link to="/list" class="bar_fount">目录</router-link>
+                            @click.native="aboutMe"></el-avatar>
+                    <router-link to="/tags" class="index_header_bar_fount">标签</router-link>
+                    <router-link to="/list" class="index_header_bar_fount" ref="header_links">目录</router-link>
                 </div>
                 <el-form class="index-header-bar-search">
                     <el-input placeholder="搜索..." prefix-icon="el-icon-search"></el-input>
@@ -19,16 +20,18 @@
             </div>
         </transition>
 
-        <div class="header-title-center header-title-center-before">
-            <div>
-            <painter-tag v-for="t in $store.state.headerTags" :key="t">
-                {{t}}
-            </painter-tag></div>
-            <h1 class="index-header-title mix header-title-align-before">{{$store.state.headerTitle}}</h1>
-            <h2 class="index-header-subtitle mix header-title-align-before">{{$store.state.headerSubTitle}}</h2>
-            <div class="meta mix header-title-align-before">{{$store.state.headerName}}&nbsp;on&nbsp;
+        <div class="header-title-center header-title-center-before" ref="header-title-center">
+            <div class="header-title-align-before" ref="header-title-align-1">
+            <painter-tag v-for="t in $store.state.headerTags" :key="t" :inner="t"/></div>
+            <h1 class="index-header-title mix header-title-align-before" ref="header-title-align-2">{{$store.state.headerTitle}}</h1>
+            <h2 class="index-header-subtitle mix header-title-align-before" ref="header-title-align-3">{{$store.state.headerSubTitle}}</h2>
+            <div class="meta mix header-title-align-before" ref="header-title-align-4">{{$store.state.headerName}}&nbsp;on&nbsp;
                 {{new Date($store.state.headerTime) | moment}}
             </div>
+            <div class="friendLinkPad" ref="friendLinkPad" v-show="!an">
+                <div>常用链接</div>
+            </div>
+            <div class="el-icon-arrow-down header-down" v-show="!an" @click="aboutMe"></div>
         </div>
     </div>
 </template>
@@ -53,16 +56,14 @@
                     backgroundColor: 'rgba(0,0,0,0)',
                     color: '#000'
                 },
-                an: false,
+                an: true,
+                links: null
             }
         },
         methods: {
             menu() {
                 let scroll = document.documentElement.scrollTop || document.body.scrollTop;
                 this.showBar = scroll <= this.lastScroll || scroll === 0;
-                if (!this.showBar) {
-                    this.aboutMe(false)
-                }
                 this.lastScroll = scroll;
                 if (scroll === 0) {
                     this.bc = {
@@ -81,47 +82,52 @@
                 document.documentElement.scrollTop = 0;
                 document.body.scrollTop = 0;
             },
-            avatarError() {
-                console.log("avatar Error");
-                return true
-            },
-            aboutMe(show) {
-                if(show === this.an){
-                    return
-                }
-                this.an = show
-                if (show) {
-                    let htcb = document.querySelectorAll('.header-title-center-before')
-                    let htab = document.querySelectorAll('.header-title-align-before')
+            aboutMe() {
+                document.body.style.overflowY = this.an?"hidden":"scroll"
+                document.documentElement.scrollTop = 0
+                document.body.scrollTop = 0
+                let avatar = this.$refs['avatar'].$el.classList
+                let htcb = this.$refs["header-title-center"].classList
+                let hta1 = this.$refs['header-title-align-1'].classList
+                let hta2 = this.$refs['header-title-align-2'].classList
+                let hta3 = this.$refs['header-title-align-3'].classList
+                let hta4 = this.$refs['header-title-align-4'].classList
+                if (this.an) {
                     this.$store.commit("setHeader", {
                         title: this.$store.state.authorName,
                         subTitle: this.$store.state.authorSay,
                         time: this.$store.state.authorLastLogin,
-                        tags: [this.$store.state.github, this.$store.state.mail],
+                        tags: ["https://github.com/"+this.$store.state.github, this.$store.state.mail],
                         name: "",
                     });
-                    for(let {classList} of htcb){
-                        classList.remove('header-title-center-before')
-                        classList.add('header-title-center-after')
-                    }
-                    for(let {classList}  of htab){
-                        classList.remove('header-title-align-before','mix')
-                        classList.add('header-title-align-after')
-                    }
+                    htcb.remove('header-title-center-before')
+                    htcb.add('header-title-center-after')
+                    avatar.remove('avatar-before')
+                    avatar.add('avatar-after')
+                    hta1.remove('header-title-align-before','mix')
+                    hta1.add('header-title-align-after')
+                    hta2.remove('header-title-align-before','mix')
+                    hta2.add('header-title-align-after')
+                    hta3.remove('header-title-align-before','mix')
+                    hta3.add('header-title-align-after')
+                    hta4.remove('header-title-align-before','mix')
+                    hta4.add('header-title-align-after')
                 } else {
-                    let htcb = document.querySelectorAll('.header-title-center-after')
-                    let htab = document.querySelectorAll('.header-title-align-after')
-                    this.$store.dispatch("setCurrentPath",
-                        this.$store.state.currentPath)
-                    for(let {classList}  of htcb){
-                        classList.remove('header-title-center-after')
-                        classList.add('header-title-center-before')
-                    }
-                    for(let {classList} of htab){
-                        classList.remove('header-title-align-after')
-                        classList.add('header-title-align-before','mix')
-                    }
+                    this.$store.dispatch("setCurrentPath", this.$store.state.currentPath)
+                    htcb.remove('header-title-center-after')
+                    htcb.add('header-title-center-before')
+                    avatar.remove('avatar-after')
+                    avatar.add('avatar-before')
+                    hta1.remove('header-title-align-after')
+                    hta1.add('header-title-align-before','mix')
+                    hta2.remove('header-title-align-after')
+                    hta2.add('header-title-align-before','mix')
+                    hta3.remove('header-title-align-after')
+                    hta3.add('header-title-align-before','mix')
+                    hta4.remove('header-title-align-after')
+                    hta4.add('header-title-align-before','mix')
                 }
+                this.an = !this.an;
             }
         },
         watch: {
@@ -145,6 +151,18 @@
         mounted() {
             window.addEventListener('scroll', this.menu, true);
             this.$store.dispatch('InitAsync');
+            let links = document.querySelectorAll('.friend-links-a.friend-links-header')
+            let el = this.$refs['header_links'].$el
+            links.forEach((e)=>{
+                e.classList.add("index_header_bar_fount")
+                el.parentElement.appendChild(e)
+            });
+
+            links = document.querySelectorAll('.friend-links-a:not(.friend-links-header)')
+            el = this.$refs['friendLinkPad']
+            links.forEach((e)=>{
+                el.appendChild(e)
+            })
         },
         beforeDestroy() {
             window.removeEventListener('scroll', this.menu, true);
@@ -153,19 +171,44 @@
 </script>
 
 <style scoped>
+    @keyframes vertical-move {
+        0% {top: -5px; color: #00000000}
+        25% {top:0px; color: #000000}
+        100% {top: 15px; color: #00000000}
+    }
+
+    .header-down{
+        animation: vertical-move 0.7s infinite;
+        font-weight: bolder;
+        font-size: 2em;
+        position: relative;
+        width: 100%;
+        text-align: center;
+        cursor: pointer;
+    }
+    .avatar-before{
+        transform: rotateZ(360deg);
+        transition: transform 0.7s;
+        cursor: pointer;
+    }
+    .avatar-after{
+        cursor: pointer;
+        transform: rotateZ(180deg);
+        transition: transform 0.7s;
+    }
     .header-container {
-        color: #fff;
-        font-family: '黑体', sans-serif;
+        color: #074B72;
+        font-family: -apple-system, "Microsoft YaHei", 'Impact', 'Charcoal', sans-serif;
         font-size: 10px;
     }
 
     .header-title-center {
-        background: url("../../public/background.jpg") top / cover fixed;
+        background: url("../../public/backgroundImage.jpg") top / cover fixed;
         border-color: #00000000;
         background-clip: border-box;
         border-style: solid;
-        width: 100%;
-        box-sizing: border-box;
+        width: 50vw;
+        box-sizing: content-box;
         white-space: nowrap;
     }
 
@@ -177,7 +220,7 @@
     }
 
     .header-title-center-after {
-        border-width: 45vh 25vw;
+        border-width: 20vh 25vw 100vh;
         font-size: 20px;
         transition: border-width 0.7s;
     }
@@ -205,7 +248,7 @@
     }
 
     .meta {
-        font-family: 'Caflisch Script', 'Adobe Poetica', cursive;
+        font-family: 'Merriweather', Georgia, serif;
         font-style: italic;
         font-weight: 300;
         font-size: 1.8em;
@@ -227,22 +270,13 @@
     }
 
     .header-bar-inner-wrapper > *, .index-header-bar-search {
-        margin: 10px 0.3em;
+        margin: 10px 7px;
     }
 
     .index-header-bar-search {
         padding: 0 0 2px 0;
     }
 
-    .bar_fount {
-        line-height: 1.6;
-        padding: 0;
-        margin: 14px 7px 0;
-        font-size: 2em;
-        text-decoration: none;
-        color: inherit;
-        cursor: pointer;
-    }
 
     .index-header-title {
         font-size: 4em;
@@ -263,4 +297,37 @@
         opacity: 0;
     }
 
+    .friendLinkPad {
+        background-color: #ffffff7c;
+        border-radius: 10px;
+        width: 50vw;
+        padding: 1em;
+    }
+    .friendLinkPad > div{
+        text-align: center;
+        font-size: 1.2em;
+        margin: 0 auto;
+        width: 10em;
+    }
+    .friendLinkPad a{
+        color: black;
+        text-decoration: none;
+    }
+
+</style>
+
+<style>
+    .index_header_bar_fount {
+        line-height: 1.6;
+        padding: 0;
+        margin: 10px 7px 0;
+        font-size: 2em;
+        text-decoration: none;
+        color: #000;
+        cursor: pointer;
+    }
+
+    .index_header_bar_fount:hover{
+        color: #074B72;
+    }
 </style>

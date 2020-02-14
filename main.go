@@ -6,6 +6,7 @@ import (
 	"github.com/painterQ/painterBlog/controllers"
 	"github.com/painterQ/painterBlog/models"
 	_ "github.com/painterQ/painterBlog/routers"
+	"os"
 	"path"
 )
 
@@ -23,9 +24,15 @@ func main() {
 	tf := controllers.TokenFilter{}
 	beego.InsertFilter(tf.GetPattern(), tf.GetPosition(), tf.GetFilter())
 
+	beego.AddTemplateExt(".html")
+	pwd,_ := os.Getwd()
+	beego.BConfig.WebConfig.ViewsPath =  path.Join(pwd,"static")
+
 	beego.DelStaticPath("static")
 	dbPath := beego.AppConfig.DefaultString(models.ConfigDBPath, models.DefaultDBPathConfig)
 	beego.SetStaticPath("/image",path.Join(dbPath, models.ImagePath))
-	beego.SetStaticPath("/static", "./static")
+	beego.SetStaticPath("/public", "./static/public")
+	beego.SetStaticPath("/tinymce", "./static/tinymce")
+
 	beego.Run()
 }

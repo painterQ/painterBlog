@@ -13,7 +13,7 @@ el-container el-aside el-header el-footer
             <el-aside class="aside" ref="aside" width="auto">
                 <painter-aside></painter-aside>
             </el-aside>
-            <el-main class="main">
+            <el-main class="main scroll">
                 <keep-alive>
                     <router-view v-if="$route.meta.keepAlive"></router-view>
                 </keep-alive>
@@ -90,7 +90,7 @@ el-container el-aside el-header el-footer
     .main {
         padding: 0;
         height: calc(100vh - 50px);
-        overflow-y: hidden;
+        overflow-y: scroll;
         background-color: #fafafa;
         box-sizing: border-box;
 

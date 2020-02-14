@@ -62,7 +62,6 @@
         padding: 1em;
         margin: 1em auto;
         background-color: white;
-        overflow-y: scroll;
         display: flex;
         flex-wrap: wrap;
     }

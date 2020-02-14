@@ -1,13 +1,12 @@
 <template>
     <div id="manage-tags">
         <div id="tags-container">
-            <span>Tags:&nbsp;</span>
+            <span>tags:&nbsp;</span>
             <painter-tag ref="painter-tags" v-for="t in getTagsSlice"
-                         :key="t" @click.native="choseTag(t)">{{t}}
-            </painter-tag>
+                         :key="t" @click.native="choseTag(t)" :inner="t"/>
         </div>
-        <div id="docList">
-            <doc-card v-for="t in show" :key="t" :doc="t"></doc-card>
+        <div id="docList" class="scroll">
+            <doc-card v-for="t in show" :key="t" :doc="t" @click.native="clickDoc"></doc-card>
         </div>
     </div>
 </template>
@@ -15,7 +14,10 @@
 <script>
     import PainterTag from "./tag";
     import DocCard from "./docCard";
-
+    import DocListClass from "../page_index/docList";
+    import vue from 'vue'
+    import api from '../api/rpc'
+    vue.use(api);
     export default {
         name: "tags-manager",
         components: {DocCard, PainterTag},
@@ -59,25 +61,42 @@
         watch: {
             "tag": {
                 async handler(newTag) {
-                    let promiseDocsList = this.$_getDocsList({start: "/doca", length: 10})
-                    let {data} = await this.$_getTags();
-                    this.tagsMap = data;
-                    let {data: docsList} = await promiseDocsList;
-                    let ret = [];
-                    let list = docsList.list;
+                    let docList = [];
+                    if (this.$store.state.docs instanceof DocListClass){
+                        this.tagsMap = (await this.$_getTags()).data;
+                        let p = new Promise((resolve)=>{
+                            let n = setInterval(()=>{
+                                if( this.$store.getters.docMateList.length > 0){
+                                    clearInterval(n)
+                                    resolve(this.$store.getters.docMateList)
+                                }
+                            },100)
+                        });
+                        docList = await p;
+                        console.log('immediate',thisTagIncludeDoc)
+                    }else {
+                        let promiseTags = this.$_getTags();
+                        let tmp = (await this.$_getDocsList({start: "/doca", length: 10})).data;
+                        docList = tmp.list;
+                        this.tagsMap = (await promiseTags).data;
+                    }
 
                     let thisTagIncludeDoc = []
-                    if (newTag) {
-                        thisTagIncludeDoc = this.tagsMap[newTag]
-                    } else {
-                        for (let k in data) {
-                            thisTagIncludeDoc = data[k];
-                            break
-                        }
+                    if (!newTag){
+                        //immediate
+                        this.show = docList
+                        return
                     }
-                    for (let doc of list) {
+                    thisTagIncludeDoc = this.tagsMap[newTag]
+                    let ret = []
+                    for (let doc of docList) {
                         for (let docIndex in thisTagIncludeDoc) {
-                            if (doc.id === thisTagIncludeDoc[docIndex]) ret.push(doc)
+                            if (doc.id === thisTagIncludeDoc[docIndex]){
+                                if(doc.lastTime &&! doc.time) {
+                                    doc.time = Number.parseInt(doc.lastTime) * 1000
+                                }
+                                ret.push(doc)
+                            }
                         }
                     }
                     this.show = ret
@@ -91,21 +110,27 @@
 <style scoped>
     #manage-tags {
         background-color: white;
-        border-radius: 10px;
         width: 80%;
         padding: 2em;
+        box-sizing: border-box;
         height: 100%;
-        margin: 1em auto;
+        margin: 0 auto;
     }
 
     #docList {
-        overflow-y: scroll;
         display: flex;
         flex-wrap: wrap;
+        margin-top: 40px;
+        box-sizing: border-box;
     }
 
     #tags-container{
-        margin: 1em;
+        position: relative;
+        top: 0;
+        margin: 0 1em;
+        height: 20%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     #tags-container span{
         font-style: italic;

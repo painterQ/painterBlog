@@ -30,7 +30,20 @@ var conf = `
         "key": "123456"
     },
 	"token": "",
-    "lastLogin": 1580185668
+    "lastLogin": 1580185668,
+	"friendLinks":[
+        {
+            "name":"github",
+            "url": "https://www.github.com",
+            "header": true
+        },{
+            "name":"百度",
+            "url": "https://www.baidu.com"
+        },{
+            "name":"知乎",
+            "url": "https://www.zhihu.com"
+        }
+    ]
 }
 `
 
@@ -52,6 +65,51 @@ func TestMain(m *testing.M) {
 	m.Run()
 	_ = os.RemoveAll(fileName)
 
+}
+
+func TestFriendLinks(t *testing.T) {
+	testLinks :=[10]LinksItem{
+		{Name: "1", URL:"http:www.dd1.cc", Header:false},
+		{Name: "2", URL:"http:www.dd2.cc", Header:false},
+		{Name: "3", URL:"http:www.dd3.cc", Header:false},
+		{Name: "4", URL:"http:www.dd4.cc", Header:false},
+		{Name: "5", URL:"http:www.dd5.cc", Header:false},
+		{Name: "6", URL:"http:www.dd6.cc", Header:false},
+		{Name: "7", URL:"http:www.dd7.cc", Header:false},
+		{Name: "8", URL:"http:www.dd8.cc", Header:false},
+		{Name: "9", URL:"http:www.dd9.cc", Header:false},
+		{Name: "10", URL:"http:www0.dd1.cc", Header:false},
+	}
+	c := new(AppConfig)
+	err := c.Start(fileName)
+	assert.Nil(t, err)
+	defer c.Close()
+	wg := sync.WaitGroup{}
+	wg.Add(3)
+	go func() {
+		for i:=0;i<100;i++{
+			r := c.GetLinks()
+			assert.True(t,len(r)>=3)
+			assert.True(t,len(r)<=13)
+		}
+		wg.Done()
+	}()
+
+	go func() {
+		for i:=0;i<100;i++{
+			c.AddLinks(&testLinks[i % 10])
+		}
+		wg.Done()
+	}()
+	go func() {
+		for i:=0;i<100;i++{
+			assert.False(t,c.RemoveLinks("www.not.exist"))
+		}
+		wg.Done()
+	}()
+	wg.Wait()
+	r:=c.GetLinks()
+	assert.True(t,len(r) == 13)
 }
 
 func TestAppConfig_StartClose(t *testing.T) {

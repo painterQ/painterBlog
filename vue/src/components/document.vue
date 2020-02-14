@@ -124,8 +124,8 @@
                     //todo 这里路径里的sttic导致移植性变差
                     //language_url: `${this.baseUrl}/static/tinymce/langs/zh_CN.js`,
                     language: 'zh_CN',
-                    skin_url: `${this.baseUrl}/static/tinymce/skins/ui/oxide`,
-                    content_css: `${this.baseUrl}/static/tinymce/skins/content/default/content.css`,
+                    skin_url: `${this.baseUrl}/tinymce/skins/ui/oxide`,
+                    content_css: `${this.baseUrl}/tinymce/skins/content/default/content.css`,
                     // skin_url: `${this.baseUrl}/tinymce/skins/ui/oxide-dark`, // 暗色系
                     // content_css: `${this.baseUrl}/tinymce/skins/content/dark/content.css`, // 暗色系
                     height: 500,
@@ -255,7 +255,7 @@
             //获取常用tag get /docs/tag
             let res = await this.$_getTags();
             let tags = []
-            for(let k in res){
+            for(let k in res.data){
                 tags.push(k)
             }
             self.commonTags = tags;
@@ -283,8 +283,6 @@
     #document {
         max-width: 1024px;
         margin: 3em auto;
-        overflow-y: scroll;
-        height: 100%;
     }
 
     .operation-flex-container {

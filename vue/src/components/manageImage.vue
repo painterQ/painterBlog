@@ -15,7 +15,7 @@
         </el-button>
         <waterfall :col='5' :data="image" ref="waterfall"
                    @scroll="scroll" :loadDistance="50"
-                   class="image-manager-waterfall">
+                   class="image-manager-waterfall scroll">
             <template>
                 <div class="cart-container" v-for="(item,index) in image" :key="index">
                     <div class="manage-card">

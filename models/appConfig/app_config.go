@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/scrypt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -42,6 +43,12 @@ type NormalConfig struct {
 	Email    string `json:"email"`
 }
 
+type LinksItem struct {
+	Name string `json:"name"`
+	URL string `json:"url"`
+	Header bool `json:"header"`
+}
+
 type ScryptJSON struct {
 	Salt string `json:"salt"`
 	Key  string `json:"key"`
@@ -52,6 +59,7 @@ type AppConfig struct {
 	PWD          ScryptJSON   `json:"pwd"`
 	LastLogin    int64        `json:"lastLogin"`
 	Token        string       `json:"token"`
+	FriendLinks []LinksItem `json:"friendLinks"`
 
 	lock           sync.RWMutex `json:"-"`
 	jsonFileHandle *os.File     `json:"-"`
@@ -216,6 +224,61 @@ func (a *AppConfig) SetPWD(in *ScryptJSON) {
 	a.PWD = *in
 	a.Token = ""
 	a.synchronize()
+}
+
+//AddLinks
+func (a *AppConfig)AddLinks(in *LinksItem){
+	_,err := url.Parse(in.URL)
+	if err != nil{
+		return
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	c := make([]LinksItem, len(a.FriendLinks),len(a.FriendLinks) + 1)
+	copy(c,a.FriendLinks)
+	for i:= range c{
+		if c[i].URL == in.URL{
+			return
+		}
+	}
+	c = append(c, *in)
+	a.FriendLinks = c
+}
+
+//RemoveLinks
+func (a *AppConfig)RemoveLinks(urlIn string)bool {
+	_,err := url.Parse(urlIn)
+	if err != nil{
+		return false
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	c := make([]LinksItem, len(a.FriendLinks))
+	copy(c,a.FriendLinks)
+	find := 0
+	for i:= range c{
+		if c[i].URL == urlIn{
+			find = 1
+		}
+		if i + find == len(c){
+			break
+		}
+		c[i] = c[i + find]
+	}
+	if find == 1{
+		a.FriendLinks = c[:len(c)-1]
+		return true
+	}
+	return false
+}
+
+//GetLinks
+func (a *AppConfig)GetLinks()[]LinksItem {
+	a.lock.RLock()
+	defer a.lock.RUnlock()
+	out := make([]LinksItem, len(a.FriendLinks))
+	copy(out,a.FriendLinks)
+	return out
 }
 
 //输出是json编码

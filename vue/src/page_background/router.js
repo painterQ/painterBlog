@@ -24,9 +24,9 @@ const routes = [
     {
         path: '/document',
         component: tinyMEC,
-        meta: {
-            keepAlive: true
-        }
+        // meta: {
+            // keepAlive: true
+        // }
     },
     {
         path: '/manage/docs',

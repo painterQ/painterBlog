@@ -11,12 +11,12 @@
                      class="index-body-docs-item"
                      @click="selectDoc(arts.id)">
                     <h2 class="art">
-                        <span v-if="arts.attr" class="arts-top">[置顶]</span>
+                        <i class="arts-top el-icon-star-on" v-if="arts.attr === 1">置顶</i>
                         <span>{{arts.title}}</span>
                     </h2>
                     <p>{{arts.abstract}}</p>
-                    <painter-tag v-for="t of arts.tags" :key="t">{{t}}</painter-tag>
-                    <div>{{$store.state.headerTitle}} on {{new Date (arts.time) | moment}}</div>
+                    <painter-tag v-for="t of arts.tags" :key="t" :inner="t"/>
+                    <div class="time">{{$store.state.authorName}} on {{new Date (arts.time) | moment}}</div>
                     <hr/>
                 </div>
                 <el-pagination
@@ -83,7 +83,6 @@
     .index-body-docs-item > div {
         font-family: 'Lora', 'Times New Roman', serif;
         color: gray;
-        font-style: italic;
         margin: 0 0 1em 0;
     }
 
@@ -95,7 +94,6 @@
     .index-body-docs-item > p {
         color: #a3a3a3;
         font-size: 0.7em;
-        font-style: italic;
     }
 
     .arts-top {
@@ -106,5 +104,14 @@
     .art {
         font-size: 1.1em;
         margin: 0 0 10px 0;
+    }
+
+    .time{
+        font-family: 'Merriweather', Georgia, serif;
+    }
+
+    .art span, .art i{
+        font-size: 2em;
+        font-weight: bold;
     }
 </style>

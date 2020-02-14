@@ -3,7 +3,7 @@
         <div class="title">{{doc.title}}</div>
         <div class="subTitle">{{doc.subTitle}}</div>
         <div class="path">path:<strong>{{doc.id}}</strong></div>
-        <painter-tag v-for="(t,tindex) in doc.tags" :key="tindex">{{t}}</painter-tag>
+        <painter-tag v-for="(t,tindex) in doc.tags" :key="tindex" :inner="t"/>
         <div class="abstract" v-popover:popover>{{this.trim(doc.abstract)}}</div>
         <el-popover
                 placement="top-start"
@@ -16,7 +16,7 @@
         </el-popover>
         <div class="info">
             <i class="top el-icon-star-on" v-if="doc.attr === 1">置顶</i>
-            <span>{{new Date(doc.lastTime) | moment}}</span>
+            <span>{{new Date(doc.time) | moment}}</span>
         </div>
     </div>
 </template>
@@ -53,11 +53,19 @@
 
 <style scoped>
     .title {
-        font-size: 1.2em;
-        font-family: sans-serif;
+        font-size: 3em;
         font-weight: bold;
-        line-height: 2em;
         white-space: nowrap;
+    }
+
+    .title:hover{
+        color: #0085a1;
+    }
+
+    .subTitle {
+        color: #0085a1;
+        line-height: 2.4em;
+        font-size: 2em;
     }
 
     .top {
@@ -67,9 +75,7 @@
 
     .abstract {
         font-weight: 200;
-        font-size: 20px;
-        font-family: "Helvetica Neue", "Arial", "PingFang SC", "Hiragino Sans GB", "STHeiti", "Microsoft YaHei", "Microsoft JhengHei", "Source Han Sans SC", "Noto Sans CJK SC", "Source Han Sans CN", "Noto Sans SC", "Source Han Sans TC", "Noto Sans CJK TC", "WenQuanYi Micro Hei", SimSun, sans-serif;
-        line-height: 1.7;
+        font-size: 1em;
     }
 
     .path {
@@ -77,32 +83,32 @@
         word-break: break-word;
         color: #757d87;
         font-weight: lighter;
-        font-size: 12px;
-        font-style: italic;
-    }
+        font-size: 1em;
+        font-family: "Lucida Console", Monaco, monospace;
 
-    .subTitle {
-        color: #0085a1;
     }
 
     .info {
-        font-size: 12px;
+        margin: 1em 0;
+        font-size: 1em;
         color: #757d87;
-        font-style: italic;
-        font-family: Sans-serif, serif;
+        font-family: -apple-system, "Microsoft YaHei", 'Impact', 'Charcoal', sans-serif;
+    }
+    .info span{
+        font-family: 'Merriweather', Georgia, serif;
     }
 
     .doc-card {
         border-radius: 4px;
-        overflow-y: hidden;
         background-color: #fff;
         box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
-        box-sizing: border-box;
-        padding: 0.5em;
+        padding: 1em;
         margin: 0.2em;
-        max-width: 900px;
-        min-width: 300px;
-        overflow-x: auto;
+        max-width: 600px;
+        font-size: 8px;
+        line-height: 1.5;
+        overflow: hidden;
+        font-family: -apple-system, "Microsoft YaHei", 'Impact', 'Charcoal', sans-serif;
         flex-grow: 1;
     }
 

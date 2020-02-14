@@ -63,4 +63,26 @@ export default {
    margin: 0;
    box-sizing: border-box;
  }
+
+.scroll::-webkit-scrollbar    /*滚动条整体部分*/
+{
+  width: 3px;
+  height:10px;
+  background-color:#b5b1b1;
+
+}
+.scroll::-webkit-scrollbar-track       /*scroll轨道背景*/
+{
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+  border-radius: 10px;
+  background-color:white;
+
+}
+
+.scroll::-webkit-scrollbar-thumb  /*滚动条中能上下移动的小块*/
+{
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+  background-color:#b5b1b1;
+}
 </style>

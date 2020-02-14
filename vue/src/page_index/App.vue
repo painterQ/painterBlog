@@ -64,35 +64,36 @@ export default {
    line-height: 1.7;
    overflow-y:scroll;
  }
-body::-webkit-scrollbar    /*滚动条整体部分*/
+.scroll::-webkit-scrollbar    /*滚动条整体部分*/
 {
   width: 3px;
   height:10px;
   background-color:#b5b1b1;
-
 }
-body::-webkit-scrollbar-track       /*scroll轨道背景*/
+.scroll::-webkit-scrollbar-track       /*scroll轨道背景*/
 {
- -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
- border-radius: 10px;
- background-color:white;
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+  border-radius: 10px;
+  background-color:white;
 
 }
 
-body::-webkit-scrollbar-thumb  /*滚动条中能上下移动的小块*/
+.scroll::-webkit-scrollbar-thumb  /*滚动条中能上下移动的小块*/
 {
   border-radius: 10px;
   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
   background-color:#b5b1b1;
 }
+
 *{
    box-sizing: border-box;
  }
+
 p{
   text-indent: 2em;
 }
-h1,h2,h3,h4,h5,h6{
-  font-family: -apple-system, "Helvetica Neue", "Arial", "PingFang SC", "Hiragino Sans GB", "STHeiti", "Microsoft YaHei", "Microsoft JhengHei", "Source Han Sans SC", "Noto Sans CJK SC", "Source Han Sans CN", "Noto Sans SC", "Source Han Sans TC", "Noto Sans CJK TC", "WenQuanYi Micro Hei", SimSun, sans-serif;
+h1,h2,h3,h4,h5,h6,p{
+  font-family: "PingFang SC", "Lantinghei SC", "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei",  STHeitiSC-Light, simsun, "WenQuanYi Zen Hei", "WenQuanYi Micro Hei", sans-serif;
   line-height: 1.5;
   font-weight: 500;
 }

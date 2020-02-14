@@ -375,7 +375,7 @@ func (ddb *DocumentLevelDB) AddTag(t []string) error {
 		if len(t[i]) == 0 {
 			continue
 		}
-		batch.Put(addTagPrefix(t[i]), []byte(t[i]))
+		batch.Put(addTagPrefix(t[i]), []byte{})
 	}
 	return ddb.db.Write(batch, nil)
 }

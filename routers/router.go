@@ -13,5 +13,8 @@ func init() {
 	admin := beego.NewNamespace("login",
 		beego.NSInclude(&controllers.LoginController{}),
 	)
+
+	beego.Router("/",&controllers.PageController{},"get:GetIndex")
+	beego.Router("/background",&controllers.PageController{},"get:GetBackground")
 	beego.AddNamespace(admin, docs)
 }

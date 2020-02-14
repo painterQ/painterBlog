@@ -305,8 +305,6 @@
     .setting {
         margin: 3em auto;
         max-width: 990px;
-        overflow-y: scroll;
-        height: 100%;
     }
 
 

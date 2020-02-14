@@ -2,7 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import {Aside, Button, Col, Container, Footer, Header, Main, Row } from "element-ui";
 
-import tinyMEC from "../components/document"
+import tagsManager from "../components/manageTags"
 import indexDocsBody from "../components/indexDocsBody";
 import indexBody from "../components/indexBody";
 import notFound from "../components/page404"
@@ -26,7 +26,7 @@ const routes = [
     },
     {
         path: '/tags',
-        component: tinyMEC
+        component: tagsManager
     },
     {
         path: '/404',

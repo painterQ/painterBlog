@@ -1,7 +1,6 @@
 <template>
     <div class="painter-tags" :style="borderStyle"
-         @mouseenter="_hover()" @mouseout="_hout()">
-        <slot></slot>
+         @mouseenter="_hover()" @mouseout="_hout()" v-html="content">
     </div>
 </template>
 
@@ -13,6 +12,10 @@
             selected: {
                 type: Boolean,
                 default: false,
+            },
+            inner: {
+                type: String,
+                default: ""
             }
         },
         data() {
@@ -21,6 +24,22 @@
             }
         },
         computed: {
+            content(){
+                if(this.inner === ""){
+                    return "empty tag"
+                }
+                if(this.inner.startsWith('http')){
+                    var a = document.createElement('a');
+                    a.href = this.inner;
+                    let url = a.host + a.pathname.replace(/^([^/])/,'/$1');
+                    if(!url){
+                        return this.inner
+                    }
+                    a.innerText = url.startsWith("www.")?url.subStr(0,4):url
+                    return a.outerHTML
+                }
+                return this.inner
+            },
             borderStyle() {
                 if (this.selected || this.curveHover) {
                     return {
@@ -43,7 +62,6 @@
                 this.curveHover = false
             },
             select(v) {
-                console.log("change selected", v)
                 this.selected = Boolean(v)
             }
         }
@@ -51,7 +69,8 @@
 </script>
 
 <style scoped>
-    .painter-tags {
+    .painter-tags ,.painter-tags a{
+        font-family: -apple-system, "Microsoft YaHei", 'Impact', 'Charcoal', sans-serif;
         display: inline-block;
         border: 1px solid;
         border-radius: 999em;
@@ -60,5 +79,9 @@
         font-size: 12px;
         text-decoration: none;
         margin: 2px;
+    }
+
+    .painter-tags:hover{
+        cursor: pointer;
     }
 </style>
