@@ -207,7 +207,7 @@
         border-color: #00000000;
         background-clip: border-box;
         border-style: solid;
-        width: 50vw;
+        width: calc(50vw - 3px);
         box-sizing: content-box;
         white-space: nowrap;
     }

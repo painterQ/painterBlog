@@ -148,13 +148,13 @@
     }
 
     .index-body-aside {
-        border-left: rgba(88, 88, 88, 0.1) 1px solid;
+        /*border-left: rgba(88, 88, 88, 0.1) 1px solid;*/
         margin: 2em 0 0 1em;
         flex-grow: 1;
-        max-width: 10em;
+        max-width: 20%;
         /*top: 10px;*/
         /*position: sticky;*/
-        height: 400px;
+        height: 50vh;
     }
 
     .k-catelog-link {

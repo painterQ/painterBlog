@@ -2,8 +2,8 @@
     <div>
         <index-header></index-header>
         <router-view class="index-layout-main"></router-view>
-        <el-backtop><i class="el-icon-caret-top"
-                        style="color: orangered"></i></el-backtop>
+        <el-backtop right="200" class="back-top-ani"><i class="el-icon-caret-top"></i></el-backtop>
+        <index-footer>{{this.$store.state.ipc}}</index-footer>
     </div>
 </template>
 
@@ -11,12 +11,13 @@
     import indexHeader from "@/components/indexHeader";
     import {Backtop} from "element-ui"
     import Vue from "vue"
-
+    import indexFooter from "./indexFooter";
     Vue.use(Backtop)
     export default {
         name: 'layout',
         components: {
             indexHeader,
+            indexFooter
         },
         props: {
             msg: String
@@ -40,6 +41,17 @@
     liner-gradient()
     radial-gradient()
     */
-
+    @keyframes backtop {
+        16% {color: Blue}
+        32% {color: BlueViolet}
+        48% {color: Red}
+        64% {color: OrangeRed}
+        80% {color: Tomato}
+        100% {color: OliveDrab}
+    }
+    .back-top-ani{
+        animation: backtop 5s infinite;
+        font-size: 1.5em;
+    }
 </style>
 <!-- Add "scoped" attribute to limit CSS to this component only -->

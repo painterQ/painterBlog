@@ -1,9 +1,9 @@
 <template>
     <div id="introduction-container">
         <ul class="introduction-ul block">
-            <li><span>作者:</span><strong>{{this.$store.state.authorName}}</strong></li>
-            <li><span>邮箱:</span><strong>{{this.$store.state.mail}}</strong></li>
-            <li><span>交友:</span><strong>{{this.$store.state.github}}</strong></li>
+            <li><span>by&nbsp;&nbsp;:</span><strong>{{this.$store.state.authorName}}</strong></li>
+            <li><span>mail:</span><strong>{{this.$store.state.mail}}</strong></li>
+            <a style="display: block">http://github.com/{{this.$store.state.github}}</a>
         </ul>
         <div class="motto block">{{this.$store.state.authorSay}}</div>
     </div>
@@ -21,24 +21,24 @@
     }
     .motto{
         text-align: center;
-        font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+        font-family: 'Merriweather', Georgia, serif;
         color: #1a222f;
     }
 
     .introduction-ul{
-        font-size: 18px;
+        font-size: 12px;
         line-height: 20px;
         list-style:none;
-        margin:0;
-        padding: 1em;
+        padding: 8px;
         overflow-x: hidden;
-        font-family: Verdana,serif;
+        font-family: "Lucida Console", Monaco, monospace;
         white-space: nowrap;
     }
 
     .block{
         display: block;
+        margin: 1em 0;
         border-radius: 4px;
-        border: 1px solid #f0a591;
+        border: 1px solid #f0381a;
     }
 </style>

@@ -41,7 +41,7 @@
         top: 0;
         z-index: 100;
         transition: height 1s;
-        padding: 2em 0 0 0;
+        padding: 70px 0 0 0;
     }
 
     .sticky {
