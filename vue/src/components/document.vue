@@ -13,12 +13,14 @@
             </div>
             <el-input type="text" id="path" v-model="path" class="editor-input"
                       placeholder="请输入路径">
-                <template slot="prepend">http://www.xixi201314.cn/</template>
+                <template slot="prepend">http://www.xixi201314.cn</template>
                 <template slot="append">.html</template>
             </el-input>
-            <editor v-model="myValue"
+            <editor v-model="value"
+                    v-loading="loading"
                     :init="init"
-                    :disabled="disabled"
+                    :key="number"
+                    :disabled="false"
                     name="document">
             </editor>
             <!--            <el-input ref="submit" type="submit"></el-input>-->
@@ -65,12 +67,12 @@
     </div>
 </template>
 <script>
-    import 'tinymce/tinymce'
-    import Editor from '@tinymce/tinymce-vue'
-    import api from '../api/rpc'
-    import 'tinymce/themes/silver'
     import Vue from 'vue'
-    import message from "../api/message";
+
+    import 'tinymce/tinymce'
+    import 'tinymce/skins/ui/oxide/skin.css'
+    import Editor from '@tinymce/tinymce-vue'
+    import 'tinymce/themes/silver'
     // 编辑器插件plugins
     // 更多插件参考：https://www.tiny.cloud/docs/plugins/
     import 'tinymce/plugins/image'// 插入上传图片插件
@@ -78,56 +80,41 @@
     import 'tinymce/plugins/table'// 插入表格插件
     import 'tinymce/plugins/lists'// 列表插件
     import 'tinymce/plugins/wordcount'// 字数统计插件
-    import {Drawer, Tag, Button, Dialog, MessageBox} from "element-ui";
+
+
+    import message from "../api/message";
+    import api from '../api/rpc'
+    import {Drawer, Tag, Button, Dialog, MessageBox, Loading} from "element-ui";
     import axios from "axios";
 
     Vue.use(api);
+    Vue.use(Loading);
     Vue.use(message);
     Vue.use(Drawer);
     Vue.use(Tag);
     Vue.use(Button);
     Vue.use(Dialog);
     export default {
+        name: document,
         components: {
             Editor,
         },
-        props: {
-            value: {
-                type: Object,
-                default() {
-                    return null
-                }
-            },
-            // 基本路径，默认为空根目录，如果你的项目发布后的地址为目录形式，
-            // 即abc.com/tinymce，baseUrl需要配置成tinymce，不然发布后资源会找不到
-            baseUrl: {
-                type: String,
-                default: ''
-            },
-            disabled: {
-                type: Boolean,
-                default: false
-            },
-            plugins: {
-                type: [String, Array],
-                default: 'lists image media table wordcount'
-            },
-            toolbar: {
-                type: [String, Array],
-                default: 'undo redo |  formatselect | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | lists image media table | removeformat'
-            }
-        },
         data() {
             return {
+                number: 0, //ref: https://www.jianshu.com/p/011c69691bce
+                loading: false,
                 drawer: false,
+                // 基本路径，默认为空根目录，如果你的项目发布后的地址为目录形式，
+                // 即abc.com/tinymce，baseUrl需要配置成tinymce，不然发布后资源会找不到
+                plugins:  'lists image media table wordcount',
+                toolbar: 'undo redo |  formatselect | bold italic forecolor backcolor |' +
+                    ' alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | ' +
+                    'lists image media table | removeformat',
                 init: {
-                    //todo 这里路径里的sttic导致移植性变差
                     //language_url: `${this.baseUrl}/static/tinymce/langs/zh_CN.js`,
-                    language: 'zh_CN',
-                    skin_url: `${this.baseUrl}/tinymce/skins/ui/oxide`,
-                    content_css: `${this.baseUrl}/tinymce/skins/content/default/content.css`,
-                    // skin_url: `${this.baseUrl}/tinymce/skins/ui/oxide-dark`, // 暗色系
-                    // content_css: `${this.baseUrl}/tinymce/skins/content/dark/content.css`, // 暗色系
+                    // language: 'zh_CN',
+                    // skin_url: `/public/skins/ui/oxide`,
+                    // content_css: `/public/skins/content/default/content.css`,
                     height: 500,
                     plugins: this.plugins,
                     toolbar: this.toolbar,
@@ -149,12 +136,10 @@
                     relative_urls: false,
                     //不允许拖动大小
                     resize: true,
-                    // 此处为图片上传处理函数，这个直接用了base64的图片形式上传图片，
-                    // 如需ajax上传可参考https://www.tiny.cloud/docs/configure/file-image-upload/#images_upload_handler
                     images_upload_handler: (blobInfo, success, failure) => {
                         let file = blobInfo.blob()
                         let type = file.type;
-                        if (type !== "image/png" && type !== "image/jpeg" && type !== "image/gif") {
+                        if (this.allowedFileTypes.indexOf(type) < 0) {
                             failure("support png、jpeg、gif");
                             return
                         }
@@ -175,15 +160,46 @@
                 subTitle: '',
                 top: false,
                 path: '',
-                myValue: '',
+                value: '',
                 abstract: '',
                 newTag: "", //新建的tag
                 tag: [], //本次选择的tag
                 commonTags: [], //常用的tag
                 allowedFileTypes: ["image/png", "image/jpeg", "image/gif"],
+                showDelete : false,
 
-                showDelete : false
+                finishInit: false
             }
+        },
+        async activated(){
+            this.number++
+            console.log('$route.path')
+            let tagPromise = this.$_getTags()
+            this.loading = true;
+            // if(!this.finishInit){
+            //     tinymce.init({});
+            //     this.finishInit = true;
+            // }
+            if(this.$store.state.currentDoc != null){
+                console.log("this.$store.state.currentDoc != null",this.$store.state.currentDoc)
+                let doc = this.$store.state.currentDoc;
+                this.$store.commit("changeCurrentDoc", null);
+                this.showDelete = true;
+                this.title = doc.title;
+                this.path = doc.id;
+                this.abstract = doc.abstract;
+                this.tag = doc.tags;
+                this.top = doc.attr === 1;
+                this.subTitle = doc.subTitle;
+                let resInner = await this.$_getDoc({doc: doc.id});
+                this.value = resInner.data;
+            }
+            this.commonTags = [];
+            for(let k in (await tagPromise)){
+                this.commonTags.push(k)
+            }
+            this.loading = false
+            console.log('$route.path end')
         },
         methods: {
             // 添加相关的事件，可用的事件参照文档=> https://github.com/tinymce/tinymce-vue => All available events
@@ -199,13 +215,13 @@
                     tag: this.tag,
                     attr: this.top?1:0,
                     subTitle: this.subTitle,
-                    document: this.myValue,
+                    document: this.value,
                 });
                 message.message(this, "发布成功", 'success');
             },
             // 可以添加一些自己的自定义事件，如清空内容
             clear() {
-                this.myValue = '';
+                this.value = '';
                 this.title = '';
                 this.path = '';
                 this.abstract = '';
@@ -250,32 +266,6 @@
                 this.newTag = ""
             }
         },
-        async mounted() {
-            let self = this;
-            //获取常用tag get /docs/tag
-            let res = await this.$_getTags();
-            let tags = []
-            for(let k in res.data){
-                tags.push(k)
-            }
-            self.commonTags = tags;
-
-            //todo 复用
-            if(this.$store.state.currentDoc != null){
-                let doc = this.$store.state.currentDoc
-                this.$store.commit("changeCurrentDoc", null)
-                this.showDelete = true
-                this.title = doc.title;
-                this.path = doc.id;
-                this.abstract = doc.abstract;
-                this.tag = doc.tags;
-                this.top = doc.attr === 1;
-                this.subTitle = doc.subTitle;
-                this.$_getDoc({doc: doc.id}).then((res)=>{
-                    this.myValue = res.data
-                })
-            }
-        }
     }
 </script>
 
@@ -293,7 +283,11 @@
     }
 
     .operation-flex-container > div {
-        width: 60%;
+        width: 600px;
+    }
+
+    .operation-flex-container > buttom {
+        max-width: 7%;
     }
 
     #tinymce-editor-form > div {

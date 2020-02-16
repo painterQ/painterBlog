@@ -43,12 +43,12 @@ const store = new Vuex.Store({
             },
             getDoc: state => {
                 if (!state._initFinish) return "";
-                if (!/^\/doc\/.*/.test(state.currentPath)) {
+                if (!/^\/docs\/.*/.test(state.currentPath)) {
                     return ""
                 }
                 //_docNeedRefresh既是依赖也是变动项，但是这不会导致再调用一次
                 if(state._docNeedRefresh) state._docNeedRefresh = false;
-                let docID = state.currentPath.substr(4);
+                let docID = state.currentPath.substr(5);
                 try {
                     return state.docs.get(docID)
                 } catch (e) {
@@ -60,6 +60,7 @@ const store = new Vuex.Store({
                         })();
                         return "" //getting document
                     }
+                    console.log("#######404",state.currentPath)
                     return "/404" //e === state.docs.ErrNeedGetMateList
                 }
             },
@@ -67,7 +68,7 @@ const store = new Vuex.Store({
                 if (!state.currentPath) {
                     return ""
                 }
-                return state.docs.prev(state.currentPath.substr(4));
+                return state.docs.prev(state.currentPath.substr(5));
             },
             nextDoc: state => {
                 if (!state.currentPath) {
@@ -122,8 +123,8 @@ const store = new Vuex.Store({
 
             setCurrentPath({state, commit}, path) {
                 state.currentPath = path;
-                if (state.currentPath.startsWith("/doc")) {
-                    let currentDoc = state.docs.docSet[state.currentPath.substr(4)]
+                if (state.currentPath.startsWith("/docs")) {
+                    let currentDoc = state.docs.docSet[state.currentPath.substr(5)]
                     if (!currentDoc) return; //docSet没有初始化完成
                     commit("setHeader", {
                         title: currentDoc.title,

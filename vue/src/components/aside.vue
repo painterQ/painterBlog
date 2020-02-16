@@ -36,9 +36,9 @@
     let map = [
         {path: '/home', index: '1'},
         {path: '/document', index: '2'},
-        {path: '/manage/docs', index: '3-1'},
-        {path: '/manage/image', index: '3-2'},
-        {path: '/manage/tags', index: '3-3'},
+        {path: '/docs', index: '3-1'},
+        {path: '/image', index: '3-2'},
+        {path: '/tags', index: '3-3'},
     ]
     Vue.use(Menu);
     Vue.use(MenuItem);

@@ -103,12 +103,11 @@
     #login {
         background-color: white;
         display: block;
-        overflow: scroll;
+        overflow: auto;
         border-radius: 2px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
         box-sizing: border-box;
         padding: 1em 2em;
-        width: 15em;
         max-width: 100%;
         min-height: 15px;
     }

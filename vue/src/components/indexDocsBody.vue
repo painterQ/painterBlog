@@ -47,6 +47,7 @@
             document(){
                 let doc = this.$store.getters.getDoc;
                 if (doc === "/404"){
+                    console.log("#####404")
                     this.$router.replace("/404");
                     return ""
                 }
@@ -59,16 +60,16 @@
         methods: {
             prevDoc() {
                 //仍然在当前组件，所以只是复用，没有重新触发mounted
-                let current = this.$route.path.substr(4);
+                let current = this.$route.path.substr(5);
                 let prev = this.$store.getters.prevDoc;
                 if (!prev || prev === current) return;
-                this.$router.push("/doc" + prev);
+                this.$router.push("/docs" + prev);
             },
             nextDoc() {
-                let current = this.$route.path.substr(4);
+                let current = this.$route.path.substr(5);
                 let next = this.$store.getters.nextDoc;
                 if (!next || next === current) return;
-                this.$router.push("/doc" + next);
+                this.$router.push("/docs" + next);
             },
         },
         mounted() {

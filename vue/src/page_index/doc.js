@@ -16,7 +16,7 @@ class Doc {
         "second"
       ],
       "attr": 0,
-      "lastTime": 1580263731,
+      "time": 1580263731,
       "abstract": "这是我的第二篇blog，希望从此没有bug。"
     }
     * */
@@ -26,7 +26,7 @@ class Doc {
         this.subTitle = init.subTitle;
         this.tags = JSON.parse(JSON.stringify(init.tags));
         this.attr = init.attr;
-        this.time = Number(init.lastTime) * 1000;
+        this.time = Number(init.time) * 1000;
         this.abstract = init.abstract;
     }
 }

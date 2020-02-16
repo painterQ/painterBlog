@@ -1,5 +1,5 @@
 <template>
-    <div class="doc-card">
+    <div class="doc-card" @click.stop="click">
         <div class="title">{{doc.title}}</div>
         <div class="subTitle">{{doc.subTitle}}</div>
         <div class="path">path:<strong>{{doc.id}}</strong></div>
@@ -12,12 +12,14 @@
                 width="200"
                 trigger="hover"
                 v-popover:abstract
+                popper-class="doc-card-popover-abstract"
                 :content="doc.abstract">
         </el-popover>
         <div class="info">
             <i class="top el-icon-star-on" v-if="doc.attr === 1">置顶</i>
             <span>{{new Date(doc.time) | moment}}</span>
         </div>
+
     </div>
 </template>
 
@@ -41,6 +43,9 @@
             }
         },
         methods: {
+            click(){
+                this.$emit("selectCard",this.doc)
+            },
             trim(s) {
                 if(s.length < 14){
                     return s
@@ -119,4 +124,11 @@
         cursor: pointer;
     }
 
+</style>
+
+<style>
+    .doc-card-popover-abstract{
+        font-size: 10px;
+        font-weight: 200;
+    }
 </style>

@@ -39,7 +39,7 @@ function changePwdChange(info) {
 
 //获取文章元信息
 //{"id":"first","title":"first","subTitle":"blog",
-// "tags":["blog","document"],"attr":0,"lastTime":"",
+// "tags":["blog","document"],"attr":0,"time":"",
 // "abstract":"PHA+Zmlyc3Q8L3A+"},
 function getDocsList(info) {
     console.log("api, 获取文章元信息");

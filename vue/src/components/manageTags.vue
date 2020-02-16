@@ -3,11 +3,21 @@
         <div id="tags-container">
             <span>tags:&nbsp;</span>
             <painter-tag ref="painter-tags" v-for="t in getTagsSlice"
-                         :key="t" @click.native="choseTag(t)" :inner="t"/>
+                         :key="t" @clickTag="choseTag(t)" :inner="t" :selected="getCurrentTag === t"/>
         </div>
         <div id="docList" class="scroll">
-            <doc-card v-for="t in show" :key="t" :doc="t" @click.native="clickDoc"></doc-card>
+            <doc-card v-for="t in show" :key="t" :doc="t" @selectCard="clickDoc"></doc-card>
         </div>
+        <el-dialog
+                title="提示"
+                :visible.sync="dialogVisible"
+                width="30%">
+            是否要开始编辑《{{getDoc}}》？这可能导致编辑器已有的内容被覆盖
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="dialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="editAgain">编 辑</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -24,20 +34,63 @@
         data() {
             return {
                 tagsMap: null,
-                tag: "",
                 show: [],
+                docList: [],
+                forecourt: this.$store.state.docs instanceof DocListClass,
+
+                dialogVisible: false,
+                transferDoc: null,
             }
         },
         methods: {
             choseTag(tag) {
                 this.tag = tag;
                 for (let i in this.$refs['painter-tags']) {
-                    console.log("?", this.tagsMap[tag], i, tag)
                     if (tag === this.getTagsSlice[i]) {
                         this.$refs['painter-tags'][i].select(true)
                     } else {
                         this.$refs['painter-tags'][i].select(false)
                     }
+                }
+            },
+            editAgain(){
+                this.$store.commit("changeCurrentDoc", this.transferDoc)
+                this.$router.push('/document')
+            },
+            clickDoc(doc){
+                if(this.forecourt){
+                    this.$router.push('/docs'+doc.id)
+                    return
+                }
+                this.dialogVisible = true
+                this.transferDoc = doc
+            },
+            getTagFromPath(path){
+                let p = (path.substr(0,1) === "/")?path.substr(1):path
+                let i = p.indexOf("/")
+                return i>0? p.substr(i+1):""
+            },
+            isFormSelf(path){
+                if(!path) return false;
+                return path.startsWith("/tags")
+            },
+            async initDocListAndTags(){
+                if (this.forecourt){
+                    this.tagsMap = (await this.$_getTags()).data;
+                    let p = new Promise((resolve)=>{
+                        let n = setInterval(()=>{
+                            if( this.$store.getters.docMateList.length > 0){
+                                clearInterval(n)
+                                resolve(this.$store.getters.docMateList)
+                            }
+                        },100)
+                    });
+                    this.docList = await p;
+                }else {
+                    let promiseTags = this.$_getTags();
+                    let tmp = (await this.$_getDocsList({start: "/doca", length: 10})).data;
+                    this.docList = tmp.list;
+                    this.tagsMap = (await promiseTags).data;
                 }
             }
         },
@@ -49,6 +102,12 @@
                 }
                 return ret
             },
+            getDoc() {
+                return this.transferDoc?this.transferDoc.title:""
+            },
+            getCurrentTag(){
+                return this.getTagFromPath(this.$route.path)
+            },
             showDocList: {
                 get() {
                     return this._docNeedRefresh
@@ -59,42 +118,35 @@
             }
         },
         watch: {
-            "tag": {
-                async handler(newTag) {
-                    let docList = [];
-                    if (this.$store.state.docs instanceof DocListClass){
-                        this.tagsMap = (await this.$_getTags()).data;
-                        let p = new Promise((resolve)=>{
-                            let n = setInterval(()=>{
-                                if( this.$store.getters.docMateList.length > 0){
-                                    clearInterval(n)
-                                    resolve(this.$store.getters.docMateList)
-                                }
-                            },100)
-                        });
-                        docList = await p;
-                        console.log('immediate',thisTagIncludeDoc)
-                    }else {
-                        let promiseTags = this.$_getTags();
-                        let tmp = (await this.$_getDocsList({start: "/doca", length: 10})).data;
-                        docList = tmp.list;
-                        this.tagsMap = (await promiseTags).data;
+            "$route.path": {
+                async handler(newPath, oldPath) {
+                    let tag = this.getTagFromPath(newPath)
+                    let fromOther = tag === ""; //example from /document， newPath is /tags
+                    let fromNothing = oldPath === ""; //example refresh
+                    let fromSelf = this.isFormSelf(oldPath);//example from /tags/example
+                    if (!fromSelf){
+                        console.log("tags init")
+                        await this.initDocListAndTags()
+                    }
+
+                    if(!fromOther && !this.tagsMap[tag]){
+                        this.$router.push('/404')
+                        return
                     }
 
                     let thisTagIncludeDoc = []
-                    if (!newTag){
+                    if (fromNothing || fromOther){
                         //immediate
-                        this.show = docList
+                        this.show = this.docList;
                         return
                     }
-                    thisTagIncludeDoc = this.tagsMap[newTag]
-                    let ret = []
-                    for (let doc of docList) {
+
+                    thisTagIncludeDoc = this.tagsMap[tag];
+                    let ret = [];
+                    for (let doc of this.docList) {
                         for (let docIndex in thisTagIncludeDoc) {
                             if (doc.id === thisTagIncludeDoc[docIndex]){
-                                if(doc.lastTime &&! doc.time) {
-                                    doc.time = Number.parseInt(doc.lastTime) * 1000
-                                }
+                                doc.time = Number.parseInt(doc.time) * 1000
                                 ret.push(doc)
                             }
                         }
@@ -102,7 +154,7 @@
                     this.show = ret
                 },
                 immediate: true
-            }
+            },
         }
     }
 </script>
@@ -124,6 +176,11 @@
         box-sizing: border-box;
     }
 
+    #docList:after {
+        content: '';
+        flex-grow: 99999;
+    }
+
     #tags-container{
         position: relative;
         top: 0;
@@ -137,10 +194,5 @@
         color: #757d87;
         font-weight: bold;
         font-size: 20px;
-    }
-
-    #docList:after {
-        content: '';
-        flex-grow: 99999;
     }
 </style>

@@ -1,7 +1,8 @@
 <template>
-    <div class="painter-tags" :style="borderStyle"
-         @mouseenter="_hover()" @mouseout="_hout()" v-html="content">
-    </div>
+    <a class="painter-tags" :style="borderStyle" @click.stop="_click"
+         @mouseenter="_hover()" @mouseout="_hout()" :href="href">
+        {{innerText}}
+    </a>
 </template>
 
 <script>
@@ -9,10 +10,12 @@
     export default {
         name: "painter-tag",
         props: {
+            /*api*/
             selected: {
                 type: Boolean,
                 default: false,
             },
+            /*api*/
             inner: {
                 type: String,
                 default: ""
@@ -21,25 +24,36 @@
         data() {
             return {
                 curveHover: false,
+                href: "",
+                innerText:""
             }
         },
-        computed: {
-            content(){
-                if(this.inner === ""){
-                    return "empty tag"
-                }
-                if(this.inner.startsWith('http')){
-                    var a = document.createElement('a');
-                    a.href = this.inner;
-                    let url = a.host + a.pathname.replace(/^([^/])/,'/$1');
-                    if(!url){
-                        return this.inner
+        watch: {
+            "inner":{
+                handler(newValue){
+                    if(newValue === ""){
+                        this.innerText = "empty tag";
+                        return
                     }
-                    a.innerText = url.startsWith("www.")?url.subStr(0,4):url
-                    return a.outerHTML
-                }
-                return this.inner
+                    if(newValue.startsWith('http')){
+                        var a = document.createElement('a');
+                        let url = a.host + a.pathname.replace(/^([^/])/,'/$1');
+                        if(!url){
+                            this.innerText = newValue
+                            return;
+                        }
+                        a.href = newValue;
+                        this.href = url;
+                        this.innerText = url.startsWith("www.")?url.subStr(0,4):url;
+                        return
+                    }
+                    this.innerText = newValue
+                    this.href = "#/tags/"+ newValue;
+                },
+                immediate: true
             },
+        },
+        computed:{
             borderStyle() {
                 if (this.selected || this.curveHover) {
                     return {
@@ -55,6 +69,10 @@
             },
         },
         methods: {
+            _click(){
+                /*api*/
+                this.$emit("clickTag", this.innerText, this.url)
+            },
             _hover() {
                 this.curveHover = true
             },

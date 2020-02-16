@@ -11,32 +11,50 @@ const routes = [
     {
         path: '/',
         redirect : '/list',
+        mate:{
+            keepAlive: true
+        }
     },
     {
         path: "/list",
         component: indexBody,
+        mate:{
+            keepAlive: true
+        }
     },
     {
-        path: '/doc/*',
+        path: '/docs/*',
         component: indexDocsBody,
-        /*独享的路由守卫*/
-        // beforeEnter: (to, from, next) => {
-        //     next()
-        // }
+        mate:{
+            keepAlive: true
+        }
     },
     {
         path: '/tags',
-        component: tagsManager
+        component: tagsManager,
+        mate:{
+            keepAlive: true
+        }
+    },
+    {
+        path: '/tags/*',
+        component: tagsManager,
+        mate:{
+            keepAlive: true
+        }
     },
     {
         path: '/404',
-        component: notFound
+        component: notFound,
+        mate:{
+            keepAlive: true
+        }
     },
     /*含有通配符的路由应该放在最后,谁先定义的，谁的优先级就最高*/
-    {
-        path: '*',
-        redirect: '/404'
-    },
+    // {
+    //     path: '*',
+    //     redirect: '/404'
+    // },
 ];
 
 

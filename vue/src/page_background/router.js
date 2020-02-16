@@ -3,7 +3,7 @@ import VueRouter from 'vue-router'
 import {Aside, Button, Col, Container, Footer, Header, Main, Row} from "element-ui";
 
 import painterSetting from "../components/setting"
-import tinyMEC from "../components/document"
+import document from "../components/document"
 import notFound from "../components/page404"
 import imageManager from "../components/manageImage"
 import tagsManager from "../components/manageTags"
@@ -23,21 +23,28 @@ const routes = [
     },
     {
         path: '/document',
-        component: tinyMEC,
-        // meta: {
-            // keepAlive: true
-        // }
+        component: document,
+        meta: {
+            keepAlive: true
+        }
     },
     {
-        path: '/manage/docs',
+        path: '/docs',
         component: docsManager,
     },
     {
-        path: '/manage/tags',
+        path: '/tags/*',
         component: tagsManager,
     },
     {
-        path: '/manage/image',
+        path: '/tags',
+        component: tagsManager,
+        meta: {
+            keepAlive: true
+        }
+    },
+    {
+        path: '/image',
         component: imageManager,
         meta: {
             keepAlive: true
@@ -48,10 +55,10 @@ const routes = [
         component: notFound
     },
     /*含有通配符的路由应该放在最后,谁先定义的，谁的优先级就最高*/
-    {
-        path: '*',
-        redirect: '/404'
-    },
+    // {
+    //     path: '*',
+    //     redirect: '/404'
+    // },
 ];
 
 

@@ -1,7 +1,9 @@
 <template>
     <div>
         <index-header></index-header>
-        <router-view class="index-layout-main"></router-view>
+        <keep-alive>
+            <router-view class="index-layout-main"></router-view>
+        </keep-alive>
         <el-backtop right="200" class="back-top-ani"><i class="el-icon-caret-top"></i></el-backtop>
         <index-footer>{{this.$store.state.ipc}}</index-footer>
     </div>

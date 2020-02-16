@@ -30,7 +30,7 @@ class DocListClass {
         }
 
         if (!this.getDocMate(k)){
-            console.log("not in list too, 404")
+            console.log(k,"not in list too, 404")
             throw this.ErrNeedGetMateList
         }
         console.log("in doclist ,get doc by api")

@@ -67,7 +67,7 @@
         },
         methods: {
             selectDoc(artID) {
-                this.$router.push('/doc' + artID)
+                this.$router.push('/docs' + artID)
             },
             //pagination
             up2Top() {
