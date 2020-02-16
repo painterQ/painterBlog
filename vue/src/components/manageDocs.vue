@@ -4,7 +4,7 @@
                 title="提示"
                 :visible.sync="dialogVisible"
                 width="30%">
-            是否要编辑《{{getDoc}}》，可能导致覆盖已有文章
+            是否要编辑《{{getDocTitle}}》，可能导致覆盖已有文章
             <span slot="footer" class="dialog-footer">
                 <el-button @click="dialogVisible = false">取 消</el-button>
                 <el-button type="primary" @click="editAgain">编 辑</el-button>
@@ -27,7 +27,7 @@
             DocCard,
         },
         computed: {
-            getDoc() {
+            getDocTitle() {
                 return this.transferDoc?this.transferDoc.title:""
             }
         },

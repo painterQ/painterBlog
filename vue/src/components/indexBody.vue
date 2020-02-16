@@ -54,14 +54,14 @@
                 //pagination
                 currentPage: 1,
                 pageSize: 5,
-
+                all:[],
             }
         },
         computed: {
             docList() {
-                let all = this.$store.getters.docMateList;
+                console.log("docList render",this.all)
                 //分页逻辑 [(currentPage -1) * pageSize, currentPage * pageSize)
-                return all.slice((this.currentPage - 1) * this.pageSize,
+                return this.all.slice((this.currentPage - 1) * this.pageSize,
                     this.currentPage * this.pageSize)
             }
         },
@@ -76,6 +76,11 @@
                 document.body.scrollTop = 0;
             },
         },
+        async mounted() {
+            await this.$store.state.initPromise;
+            this.all = this.$store.getters.docMateList;
+            console.log("get docMateList", this.all)
+        }
     }
 </script>
 

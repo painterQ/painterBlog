@@ -113,7 +113,7 @@
                     hta4.remove('header-title-align-before','mix')
                     hta4.add('header-title-align-after')
                 } else {
-                    this.$store.dispatch("setCurrentPath", this.$store.state.currentPath)
+                    this.$store.dispatch("setCurrentPath", this.$route.path)
                     htcb.remove('header-title-center-after')
                     htcb.add('header-title-center-before')
                     avatar.remove('avatar-after')
@@ -132,10 +132,11 @@
         },
         watch: {
             //如果没有immediate，避免了部分组件内路由，但是mounted还是不能省的，否则刷新不会触发
-            '$route.fullPath': {
-                handler: function (newFlag, /*oldFlag*/) {
-                    this.$store.dispatch('setCurrentPath', newFlag);
+            '$route.path': {
+                async handler(newFlag, /*oldFlag*/) {
                     this.up2Top();
+                    await this.$store.initPromise
+                    this.$store.dispatch('setCurrentPath', newFlag);
                 },
                 //立即触发，可以省略很多mounted，因为这里刷新也会触发了
                 //最佳实践就是，新建一个总会存在的components，然后在其中加route的watcher

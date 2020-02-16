@@ -28,7 +28,7 @@ type DocumentMate struct {
 	SubTitle string   `json:"subTitle"`
 	Tags     []string `json:"tags"`
 	Attr     int      `json:"attr"`
-	LastTime int64    `json:"lastTime"`
+	LastTime int64    `json:"time"`
 	Abstract string   `json:"abstract"`
 }
 

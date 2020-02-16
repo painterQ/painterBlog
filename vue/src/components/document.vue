@@ -106,18 +106,16 @@
                 drawer: false,
                 // 基本路径，默认为空根目录，如果你的项目发布后的地址为目录形式，
                 // 即abc.com/tinymce，baseUrl需要配置成tinymce，不然发布后资源会找不到
-                plugins:  'lists image media table wordcount',
-                toolbar: 'undo redo |  formatselect | bold italic forecolor backcolor |' +
-                    ' alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | ' +
-                    'lists image media table | removeformat',
                 init: {
                     //language_url: `${this.baseUrl}/static/tinymce/langs/zh_CN.js`,
                     // language: 'zh_CN',
-                    // skin_url: `/public/skins/ui/oxide`,
-                    // content_css: `/public/skins/content/default/content.css`,
+                    skin_url: `./public/skins/ui/oxide`,
+                    content_css: `./public/skins/content/default/content.css`,
                     height: 500,
-                    plugins: this.plugins,
-                    toolbar: this.toolbar,
+                    plugins: 'lists image media table wordcount',
+                    toolbar: 'undo redo |  formatselect | bold italic forecolor backcolor |' +
+                ' alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | ' +
+                'lists image media table | removeformat',
                     branding: false,
                     menubar: false,
                     //粘贴图片
@@ -172,14 +170,10 @@
             }
         },
         async activated(){
+            this.loading = true;
             this.number++
             console.log('$route.path')
             let tagPromise = this.$_getTags()
-            this.loading = true;
-            // if(!this.finishInit){
-            //     tinymce.init({});
-            //     this.finishInit = true;
-            // }
             if(this.$store.state.currentDoc != null){
                 console.log("this.$store.state.currentDoc != null",this.$store.state.currentDoc)
                 let doc = this.$store.state.currentDoc;
@@ -195,7 +189,7 @@
                 this.value = resInner.data;
             }
             this.commonTags = [];
-            for(let k in (await tagPromise)){
+            for(let k in (await tagPromise).data){
                 this.commonTags.push(k)
             }
             this.loading = false
@@ -229,6 +223,7 @@
                 this.tag = [];
                 this.top = false;
                 this.subTitle = "";
+                this.showDelete = false;
             },
             async deleteCurrentDoc(){
                 try{
@@ -238,7 +233,6 @@
                         type: 'warning'
                     });
                     await this.$_deleteDoc(this.path)
-                    console.log("now list",this.list,this.path)
                     this.showDelete = false;
                     this.clear();
                     message.message(this,'删除成功!','success');

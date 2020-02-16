@@ -3,5 +3,5 @@ if [ ! -d "./vue/node_modules" ]; then
 fi
 
 cd ./vue && npm run build -config ./vue/vue.config.js && cd ..
-##cp ./vue/node_module/tinymce/skins ./static/public/skins
+cp -r ./vue/node_modules/tinymce/skins ./static/public/skins
 go run ./

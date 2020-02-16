@@ -30,6 +30,7 @@ const store = new Vuex.Store({
             currentPath: "",
             _docNeedRefresh: false,
             _initFinish: false,
+            initPromise: null,
             total: 0
         },
         getters: {
@@ -39,28 +40,27 @@ const store = new Vuex.Store({
                 for (let e of state.docs) {
                     output.push(e)
                 }
+                console.log("store docMateList",output)
                 return output
             },
-            getDoc: state => {
+            getDocFromStore: state => {
                 if (!state._initFinish) return "";
                 if (!/^\/docs\/.*/.test(state.currentPath)) {
                     return ""
                 }
                 //_docNeedRefresh既是依赖也是变动项，但是这不会导致再调用一次
-                if(state._docNeedRefresh) state._docNeedRefresh = false;
                 let docID = state.currentPath.substr(5);
                 try {
                     return state.docs.get(docID)
                 } catch (e) {
                     if (e === state.docs.ErrNeedGetDoc) {
-                        (async ()=>{
+                        return new Promise(async (resolve)=>{
                             let res = await api.getDoc({doc: docID})
                             state.docs.set(docID, res.data);
                             state._docNeedRefresh = true //getDoc需要被再调用一次
-                        })();
-                        return "" //getting document
+                            resolve(res.data)
+                        });
                     }
-                    console.log("#######404",state.currentPath)
                     return "/404" //e === state.docs.ErrNeedGetMateList
                 }
             },
@@ -99,28 +99,6 @@ const store = new Vuex.Store({
             },
         },
         actions: {
-            async InitAsync({state, commit, dispatch}) {
-                console.log("this",this)
-                console.log("api getDocsList...", 0 + new Date());
-                let data1 = api.getAuthorInfo();
-                let data2 = api.getDocsList({start: "/doca", length: 10});
-                let {data: authorInfo} = await data1;
-                //title,subTitle, avatat, lastLogin, name, ipc,github,say,email
-                commit("setAuthor", authorInfo);
-                //title, subTitle, name, time, tags
-                authorInfo.time = this.lastLogin;
-                authorInfo.tags = ["博客"];
-                commit("setHeader", authorInfo)
-
-                let {data: {list: set}} = await data2;
-                for (let i in set) {
-                    state.docs.docSet[set[i].id] = new Doc(set[i]);
-                }
-                dispatch("setCurrentPath",state.currentPath);
-                state.total = Number(set.length);
-                state._initFinish = true
-            },
-
             setCurrentPath({state, commit}, path) {
                 state.currentPath = path;
                 if (state.currentPath.startsWith("/docs")) {
@@ -141,11 +119,51 @@ const store = new Vuex.Store({
                         tags: ["博客"],
                         name: state.authorName,
                     })
+                }else if (state.currentPath.startsWith("/tags")) {
+                    commit("setHeader", {
+                        title: "按标签分类",
+                        subTitle: state.currentPath.substr(5),
+                        time: state.authorLastLogin,
+                        tags: [],
+                        name: state.authorName,
+                    })
                 }
             }
         }
-    })
-;
+    });
+
+
+store.state.initPromise = new Promise(async (resolve)=>{
+        console.log("init store");
+        let data1 = api.getAuthorInfo();
+        let data2 = api.getDocsList({start: "/doca", length: 10});
+        let {data: authorInfo} = await data1;
+        //title,subTitle, avatat, lastLogin, name, ipc,github,say,email
+        store.state.authorAvatar = authorInfo.avatar
+        //api请求来的time是s为单位的，js中需要ms为单位
+        store.state.authorLastLogin = Number(authorInfo.lastLogin) * 1000;
+        store.state.authorName = authorInfo.name;
+        store.state.authorSay = authorInfo.say;
+        store.state.blogTitle = authorInfo.title;
+        store.state.blogSubTitle = authorInfo.subTitle;
+        store.state.ipc = authorInfo.ipc;
+        store.state.github = authorInfo.github;
+        store.state.mail = authorInfo.mail;
+        //title, subTitle, name, time, tags
+        store.state.headerTitle = authorInfo.title;
+        store.state.headerSubTitle = authorInfo.subTitle;
+        store.state.headerTags = ["博客"];
+        store.state.headerTime = authorInfo.lastLogin;
+        store.state.headerName = authorInfo.name;
+        let {data: {list: set}} = await data2;
+        for (let i in set) {
+            store.state.docs.docSet[set[i].id] = new Doc(set[i]);
+        }
+        store.state.total = Number(set.length);
+        store.state._initFinish = true
+        console.log("init finish");
+        resolve(store.state.docs)
+})
 
 export default store
 

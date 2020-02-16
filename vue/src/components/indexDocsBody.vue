@@ -9,7 +9,7 @@
             </index-aside>
             <div class="index-body-main">
                 <!-- learn: 插入HTML-->
-                <main id="doc-content" v-html="document"></main>
+                <main id="doc-content" v-html="documentContent"></main>
             </div>
         </div>
         <div class="doc-bottom">
@@ -40,22 +40,37 @@
             return {
                 scroll: 0,
                 kateLog: null,
-                menuFloat: false
+                menuFloat: false,
+                document: ""
             }
         },
-        computed: {
-            document(){
-                let doc = this.$store.getters.getDoc;
-                if (doc === "/404"){
-                    console.log("#####404")
-                    this.$router.replace("/404");
-                    return ""
-                }
-                this.$nextTick(() => {
-                    this.kateLog.rebuild();
-                });
-                return doc
-            },
+        computed:{
+            documentContent(){
+                console.log("get document")
+                return this.document
+            }
+        },
+        async activated(){
+            console.log("indexDocBody activated start")
+            await this.$store.initPromise;
+            this.$store.dispatch("setCurrentPath", this.$route.path)
+            let doc = this.$store.getters.getDocFromStore
+            if(doc instanceof Promise){
+                this.document = await doc
+                console.log("fz 1:",this.document)
+            }else {
+                this.document = doc
+                console.log("fz 2:",this.document)
+            }
+            if (this.document === "/404"){
+                this.$router.replace("/404");
+                return
+            }
+
+            this.$nextTick(() => {
+                this.kateLog.rebuild();
+            });
+            console.log("indexDocBody activated end")
         },
         methods: {
             prevDoc() {

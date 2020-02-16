@@ -79,9 +79,6 @@
             _hout() {
                 this.curveHover = false
             },
-            select(v) {
-                this.selected = Boolean(v)
-            }
         }
     }
 </script>
