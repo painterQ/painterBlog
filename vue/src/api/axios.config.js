@@ -60,12 +60,13 @@ export default {
         })
     },
     // post请求
-    post(url, param, {$router, $store, $cookies}) {
+    post(url, param, {$router, $store, $cookies}, config) {
         return new Promise((resolve, reject) => {
             axios({
                 method: "post",
                 url,
                 data: param,
+                headers: config,
             })
                 .then(res => {
                     resolve(res)

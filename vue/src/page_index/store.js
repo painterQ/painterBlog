@@ -27,56 +27,10 @@ const store = new Vuex.Store({
 
             /*文章相关*/
             docs: new DocListClass(),
-            currentPath: "",
-            _docNeedRefresh: false,
-            _initFinish: false,
             initPromise: null,
-            total: 0
+            total: 0,
         },
-        getters: {
-            docMateList: state => {
-                if (!state._initFinish) return [];
-                let output = [];
-                for (let e of state.docs) {
-                    output.push(e)
-                }
-                console.log("store docMateList",output)
-                return output
-            },
-            getDocFromStore: state => {
-                if (!state._initFinish) return "";
-                if (!/^\/docs\/.*/.test(state.currentPath)) {
-                    return ""
-                }
-                //_docNeedRefresh既是依赖也是变动项，但是这不会导致再调用一次
-                let docID = state.currentPath.substr(5);
-                try {
-                    return state.docs.get(docID)
-                } catch (e) {
-                    if (e === state.docs.ErrNeedGetDoc) {
-                        return new Promise(async (resolve)=>{
-                            let res = await api.getDoc({doc: docID})
-                            state.docs.set(docID, res.data);
-                            state._docNeedRefresh = true //getDoc需要被再调用一次
-                            resolve(res.data)
-                        });
-                    }
-                    return "/404" //e === state.docs.ErrNeedGetMateList
-                }
-            },
-            prevDoc: state => {
-                if (!state.currentPath) {
-                    return ""
-                }
-                return state.docs.prev(state.currentPath.substr(5));
-            },
-            nextDoc: state => {
-                if (!state.currentPath) {
-                    return ""
-                }
-                return state.docs.next(state.currentPath.substr(4));
-            }
-        },
+
         mutations: {
             setHeader: (state, header) => {
                 state.headerTitle = header.title || state.headerTitle;
@@ -100,9 +54,8 @@ const store = new Vuex.Store({
         },
         actions: {
             setCurrentPath({state, commit}, path) {
-                state.currentPath = path;
-                if (state.currentPath.startsWith("/docs")) {
-                    let currentDoc = state.docs.docSet[state.currentPath.substr(5)]
+                if (path.startsWith("/docs")) {
+                    let currentDoc = state.docs.docSet[path.substr(5)]
                     if (!currentDoc) return; //docSet没有初始化完成
                     commit("setHeader", {
                         title: currentDoc.title,
@@ -111,7 +64,7 @@ const store = new Vuex.Store({
                         tags: JSON.parse(JSON.stringify(currentDoc.tags)),
                         name: currentDoc.name,
                     })
-                } else if (state.currentPath.startsWith("/list")) {
+                } else if (path.startsWith("/list")) {
                     commit("setHeader", {
                         title: state.blogTitle,
                         subTitle: state.blogSubTitle,
@@ -119,10 +72,10 @@ const store = new Vuex.Store({
                         tags: ["博客"],
                         name: state.authorName,
                     })
-                }else if (state.currentPath.startsWith("/tags")) {
+                }else if (path.startsWith("/tags")) {
                     commit("setHeader", {
                         title: "按标签分类",
-                        subTitle: state.currentPath.substr(5),
+                        subTitle: path.substr(5),
                         time: state.authorLastLogin,
                         tags: [],
                         name: state.authorName,
@@ -148,7 +101,7 @@ store.state.initPromise = new Promise(async (resolve)=>{
         store.state.blogSubTitle = authorInfo.subTitle;
         store.state.ipc = authorInfo.ipc;
         store.state.github = authorInfo.github;
-        store.state.mail = authorInfo.mail;
+        store.state.mail = authorInfo.email;
         //title, subTitle, name, time, tags
         store.state.headerTitle = authorInfo.title;
         store.state.headerSubTitle = authorInfo.subTitle;
@@ -160,8 +113,40 @@ store.state.initPromise = new Promise(async (resolve)=>{
             store.state.docs.docSet[set[i].id] = new Doc(set[i]);
         }
         store.state.total = Number(set.length);
-        store.state._initFinish = true
         console.log("init finish");
+
+        store.state.docs.docMateList= () => {
+            let output = [];
+            for (let e of store.state.docs) {
+                output.push(e)
+            }
+            console.log("store docMateList",output)
+            return output
+        };
+
+        store.state.docs.getDocFromStore= (currentPath) => { //返回文章内容或者一个promise
+            if(! currentPath.startsWith("/docs")) return;
+            let docID = currentPath.substr(5);
+            try {
+                return store.state.docs.get(docID)
+            } catch (e) {
+                if (e === store.state.docs.ErrNeedGetDoc) {
+                    return new Promise(async (resolve)=>{
+                        let res = await api.getDoc({doc: docID})
+                        store.state.docs.set(docID, res.data);
+                        resolve(res.data)
+                    });
+                }
+                return "/404" //e === state.docs.ErrNeedGetMateList
+            }
+        };
+
+        store.state.docs.prevDoc = (currentPath) => {
+            return store.state.docs.prev(currentPath.substr(5));
+        },
+        store.state.docs.nextDoc = (currentPath) => {
+            return store.state.docs.next(currentPath.substr(5));
+        }
         resolve(store.state.docs)
 })
 

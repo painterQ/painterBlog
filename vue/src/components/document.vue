@@ -85,7 +85,6 @@
     import message from "../api/message";
     import api from '../api/rpc'
     import {Drawer, Tag, Button, Dialog, MessageBox, Loading} from "element-ui";
-    import axios from "axios";
 
     Vue.use(api);
     Vue.use(Loading);
@@ -102,7 +101,7 @@
         data() {
             return {
                 number: 0, //ref: https://www.jianshu.com/p/011c69691bce
-                loading: false,
+                loading: true,
                 drawer: false,
                 // 基本路径，默认为空根目录，如果你的项目发布后的地址为目录形式，
                 // 即abc.com/tinymce，baseUrl需要配置成tinymce，不然发布后资源会找不到
@@ -112,12 +111,21 @@
                     skin_url: `./public/skins/ui/oxide`,
                     content_css: `./public/skins/content/default/content.css`,
                     height: 500,
+                    menu: {
+                        file: {title:"文件",items:""},
+                        view: {title:"视图",items:""},
+                        edit: {title: '编辑', items: 'undo redo | cut copy paste pastetext | selectall'},
+                        insert: {title: '插入', items: 'lists image media table  | template hr'},
+                        format: {title: '格式', items: 'bold italic underline strikethrough superscript subscript | formats | removeformat'},
+                        table: {title: '表格', items: 'inserttable tableprops deletetable | cell row column'},
+                        tools: {title: '工具', items: 'spellchecker code'}
+                    },
                     plugins: 'lists image media table wordcount',
-                    toolbar: 'undo redo |  formatselect | bold italic forecolor backcolor |' +
+                    toolbar: 'undo redo |  styleselect | bold italic underline strikethrough superscript subscript |' +
                 ' alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | ' +
                 'lists image media table | removeformat',
                     branding: false,
-                    menubar: false,
+                    menubar: true,
                     //粘贴图片
                     paste_data_images: true,
                     //TinyMCE 会将所有的 font 元素转换成 span 元素
@@ -134,7 +142,7 @@
                     relative_urls: false,
                     //不允许拖动大小
                     resize: true,
-                    images_upload_handler: (blobInfo, success, failure) => {
+                    images_upload_handler: async (blobInfo, success, failure) => {
                         let file = blobInfo.blob()
                         let type = file.type;
                         if (this.allowedFileTypes.indexOf(type) < 0) {
@@ -143,14 +151,9 @@
                         }
                         let param = new FormData(); //创建form对象
                         param.append('avatar', file);//通过append向form对象添加数据
-                        let config = {
-                            headers: {'Content-Type': 'multipart/form-data'}
-                        };
-                        axios.post('http://localhost:8080/docs/image/filter', param, config)
-                            .then(response => {
-                                let res = response.data.list[0]
-                                success(response.data.webDN + "/" + res.src)
-                            })
+                        let response = await this.$_uploadImage(param, {'Content-Type': 'multipart/form-data'})
+                        let res = response.data.list[0]
+                        success(response.data.webDN + "/" + res.src)
                     },
 
                 },
@@ -165,14 +168,11 @@
                 commonTags: [], //常用的tag
                 allowedFileTypes: ["image/png", "image/jpeg", "image/gif"],
                 showDelete : false,
-
-                finishInit: false
             }
         },
         async activated(){
             this.loading = true;
             this.number++
-            console.log('$route.path')
             let tagPromise = this.$_getTags()
             if(this.$store.state.currentDoc != null){
                 console.log("this.$store.state.currentDoc != null",this.$store.state.currentDoc)
@@ -193,7 +193,6 @@
                 this.commonTags.push(k)
             }
             this.loading = false
-            console.log('$route.path end')
         },
         methods: {
             // 添加相关的事件，可用的事件参照文档=> https://github.com/tinymce/tinymce-vue => All available events
@@ -266,6 +265,7 @@
 <style scoped>
     #document {
         max-width: 1024px;
+        min-width: 300px;
         margin: 3em auto;
     }
 

@@ -39,11 +39,13 @@
                 tagsMap: null,
                 show: [],
                 tag: "",
-                docList: [],
+                docList: null,
                 forecourt: this.$store.state.docs instanceof DocListClass,
 
                 dialogVisible: false,
                 transferDoc: null,
+
+                inRender: false
             }
         },
         methods: {
@@ -69,8 +71,8 @@
             async initDocListAndTags(){
                 if (this.forecourt){
                     this.tagsMap = (await this.$_getTags()).data;
-                    await this.$store.state.initPromise;
-                    this.docList = this.$store.getters.docMateList;
+                    let mateCache = await this.$store.state.initPromise;
+                    this.docList = mateCache.docMateList();
                 }else {
                     let promiseTags = this.$_getTags();
                     let tmp = (await this.$_getDocsList({start: "/doca", length: 10})).data;
@@ -79,17 +81,29 @@
                 }
             },
             render(){
+                console.log("render start")
+                if (this.inRender) return;
+                this.inRender = true
                 if (this.tag === ""){
                     this.show = this.docList;
+                    this.inRender = false
+                    console.log("render end at 1")
                     return
                 }
 
                 let thisTagIncludeDoc = this.tagsMap[this.tag];
                 if(this.tag !== "" && this.tagsMap!==null && !thisTagIncludeDoc){
                     this.$router.push('/404')
+                    this.inRender = false
+                    console.log("render end at 2")
                     return
                 }
 
+                if(!this.docList){
+                    this.inRender = false
+                    console.log("render end at 3")
+                    return
+                }
                 let ret = [];
                 for (let doc of this.docList) {
                     for (let docIndex in thisTagIncludeDoc) {
@@ -100,6 +114,8 @@
                     }
                 }
                 this.show = ret
+                this.inRender = false
+                console.log("render end at 4")
             }
         },
         computed: {
@@ -133,13 +149,16 @@
                 immediate: true
             },
             tag() {
+                console.log("tag change cause")
                 this.render()
             },
             docList(){
+                console.log("docList change cause")
                 this.render()
             },
             tagsMap:{
                 handler(){
+                    console.log("tagsMap change cause")
                     this.render()
                 },
                 deep: true

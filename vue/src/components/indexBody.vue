@@ -77,8 +77,8 @@
             },
         },
         async mounted() {
-            await this.$store.state.initPromise;
-            this.all = this.$store.getters.docMateList;
+            let mateCache = await this.$store.state.initPromise;
+            this.all = mateCache.docMateList();
             console.log("get docMateList", this.all)
         }
     }

@@ -9,7 +9,7 @@
             </index-aside>
             <div class="index-body-main">
                 <!-- learn: 插入HTML-->
-                <main id="doc-content" v-html="documentContent"></main>
+                <main id="doc-content" v-html="document"></main>
             </div>
         </div>
         <div class="doc-bottom">
@@ -44,46 +44,46 @@
                 document: ""
             }
         },
-        computed:{
-            documentContent(){
-                console.log("get document")
-                return this.document
-            }
-        },
-        async activated(){
-            console.log("indexDocBody activated start")
-            await this.$store.initPromise;
-            this.$store.dispatch("setCurrentPath", this.$route.path)
-            let doc = this.$store.getters.getDocFromStore
-            if(doc instanceof Promise){
-                this.document = await doc
-                console.log("fz 1:",this.document)
-            }else {
-                this.document = doc
-                console.log("fz 2:",this.document)
-            }
-            if (this.document === "/404"){
-                this.$router.replace("/404");
-                return
-            }
+        watch:{
+            "$route.path":{
+                async handler(){
+                    console.log("indexDocBody activated start")
+                    let mateCache = await this.$store.state.initPromise;
+                    this.$store.dispatch("setCurrentPath", this.$route.path)
+                    let doc = mateCache.getDocFromStore(this.$route.path)
+                    if(doc instanceof Promise){
+                        this.document = await doc
+                        console.log("fz 1:",this.document)
+                    }else if(doc === "/404"){
+                        this.$router.replace("/404");
+                        return
+                    }else {
+                        this.document = doc
+                        console.log("fz 2:",this.document)
+                    }
 
-            this.$nextTick(() => {
-                this.kateLog.rebuild();
-            });
-            console.log("indexDocBody activated end")
+                    this.$nextTick(() => {
+                        this.kateLog.rebuild();
+                    });
+                    console.log("indexDocBody activated end")
+                },
+                immediate:true
+            }
         },
         methods: {
-            prevDoc() {
+            async prevDoc() {
                 //仍然在当前组件，所以只是复用，没有重新触发mounted
-                let current = this.$route.path.substr(5);
-                let prev = this.$store.getters.prevDoc;
-                if (!prev || prev === current) return;
+                let mateCache = await this.$store.state.initPromise;
+                let prev = mateCache.prevDoc(this.$route.path);
+                let to = "/docs" + prev;
+                if (!prev || to === this.$route.path) return;
                 this.$router.push("/docs" + prev);
             },
-            nextDoc() {
-                let current = this.$route.path.substr(5);
-                let next = this.$store.getters.nextDoc;
-                if (!next || next === current) return;
+            async nextDoc() {
+                let mateCache = await this.$store.state.initPromise;
+                let next = mateCache.nextDoc(this.$route.path);
+                let to = "/docs" + next;
+                if (!next || to === this.$route.path) return;
                 this.$router.push("/docs" + next);
             },
         },

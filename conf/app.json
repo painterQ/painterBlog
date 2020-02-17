@@ -6,15 +6,15 @@
         "say": "a blog for dear \u0026 love",
         "ipc": "浙ICP备19042136号",
         "github": "painterQ",
-        "avatar": "image/03.jpeg",
+        "avatar": "image/0f.jpeg",
         "email": "painterqiao@gmail.com"
     },
     "pwd": {
         "salt": "BWvkNfYXJgrWEMZsk52xr7ipdlyKUF_0LXYyrpVS3M4=",
         "key": "ee8jaYqsxDZ_PiqVxJZl2h9HWFIWnTrQmzjXDD_rMM8="
     },
-    "lastLogin": 1581756652,
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiOjoxIiwiZXhwIjoxNTgxOTI5NDUyLjc2OTc4MiwibmJmIjoxNTgxNzU2NjUyLjc2OTc4Mn0.uQqvkJRPJmTdi1O-ZSa897WkOKrda-DLxBeS1CY-I00",
+    "lastLogin": 1581918209,
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiOjoxIiwiZXhwIjoxNTgyMDkxMDA5LjU3NDAwNiwibmJmIjoxNTgxOTE4MjA5LjU3NDAwNn0.x6ro9Q70DvA-NUU9fhLxJm5JZQkdU9ns2d2zOVzoVD8",
     "friendLinks": [
         {
             "name": "github",

@@ -12,9 +12,9 @@ function login(user) {
 //data: { img: img, type: blobInfo.blob.type, name:"" }
 //return: {'url':"http://localhost:8080/public/img/background.0ed615ed.jpg"}
 // @router /image/filter [post]
-function uploadImage(data) {
+function uploadImage(param, config) {
     let vue = this === undefined || this === window ||!this._isVue? nil:this;
-    return util.post('/docs/image/filter', data, vue)
+    return util.post('/docs/image/filter', param, vue, config);
 }
 
 //修改基础信息
@@ -133,6 +133,8 @@ function deleteDoc(id) {
     let vue = this === undefined || this === window ||!this._isVue? nil:this;
     return util.delete('/docs/doc/filter',{id:id},vue)
 }
+
+
 
 //导出 default的含义
 export default {

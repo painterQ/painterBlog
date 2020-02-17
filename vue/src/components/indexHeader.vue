@@ -8,8 +8,9 @@
                             class="avatar-before"
                             shape="circle"
                             :size="40"
-                            fit="contain"
+                            @error="errorHandler"
                             :src="avatar"
+                            fit="cover"
                             @click.native="aboutMe"></el-avatar>
                     <router-link to="/tags" class="index_header_bar_fount">标签</router-link>
                     <router-link to="/list" class="index_header_bar_fount" ref="header_links">目录</router-link>
@@ -61,6 +62,9 @@
             }
         },
         methods: {
+            errorHandler(){
+                return true
+            },
             menu() {
                 let scroll = document.documentElement.scrollTop || document.body.scrollTop;
                 this.showBar = scroll <= this.lastScroll || scroll === 0;
@@ -135,7 +139,7 @@
             '$route.path': {
                 async handler(newFlag, /*oldFlag*/) {
                     this.up2Top();
-                    await this.$store.initPromise
+                    await this.$store.state.initPromise
                     this.$store.dispatch('setCurrentPath', newFlag);
                 },
                 //立即触发，可以省略很多mounted，因为这里刷新也会触发了

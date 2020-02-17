@@ -29,7 +29,7 @@
                 <el-avatar
                         shape="circle"
                         :size="40"
-                        fit="contain"
+                        fit="cover"
                         :src="avatar"
                         @error="avatarError"
                 ></el-avatar>
@@ -76,7 +76,6 @@
         },
         methods: {
             avatarError() {
-                //todo
                 return true
             },
             logout(command) {
