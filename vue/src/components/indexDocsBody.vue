@@ -5,6 +5,7 @@
                 <!--                <strong class="tag-tital"></strong>-->
                 <!-- 使用外部插件自动生成目录npm i katelog -S-->
                 <!-- https://github.com/KELEN/katelog-->
+                <h3 class="doc-cateLog-title">目录</h3>
                 <div id="doc-cateLog" ref="doc-cateLog"></div>
             </index-aside>
             <div class="index-body-main">
@@ -30,6 +31,7 @@
 
     import kateLogClass from 'katelog';
     import indexAside from "@/components/indexAside.vue";
+    import Prism from 'prismjs';
 
     export default {
         name: "index-docs-body",
@@ -88,6 +90,7 @@
             },
         },
         mounted() {
+            Prism.highlightAll();
             this.kateLog = new kateLogClass({
                 contentEl: 'doc-content',
                 catelogEl: 'doc-cateLog',
@@ -120,35 +123,30 @@
         background: linear-gradient(to bottom, #fccd60 0, #fbae12 100%, #2989d8 100%, #207cca 100%);
     }
 
-
-    /*#doc-cateLog{*/
-    /*    position: sticky;*/
-    /*    top: 200px;*/
-    /*}*/
-
-    /*p h1 h2 h3 h4 h5 h6*/
-    main p {
-
+    .doc-cateLog-title{
+        font-family: -apple-system, "Microsoft YaHei", 'Impact', 'Charcoal', sans-serif;
+        background-image: linear-gradient(top left,#f0381a, white);
+        font-weight: bolder;
+        font-size: 24px;
+        margin: 12px 0;
     }
 
-    main h1 {
-
+    #doc-cateLog{
+        background: #a0a0a0;
+        border-radius: 6px;
     }
 
-    main h2 {
-
-    }
-
-    main h3 {
-
-    }
-
-    main h4, main h5, main h6 {
-
-    }
 </style>
 
 <style>
+    main > h2{
+        font-family: -apple-system, "Microsoft YaHei", 'Impact', 'Charcoal', sans-serif;
+        background-image: linear-gradient(top left,#f0381a, white);
+        font-weight: bolder;
+        font-size: 30px;
+        margin: 12px 0;
+    }
+
     .index-body-all {
         display: flex;
         flex-flow: column;
@@ -173,16 +171,32 @@
         height: 50vh;
     }
 
-    .k-catelog-link {
-        font-size: 0.7em;
-        word-break: keep-all;
+    .k-catelog-level-2 {
+        font-family: 'Avenir', Helvetica, Arial, sans-serif;
+        margin-top: 5px;
+        font-size: 18px;
+        cursor: pointer;
+        word-break: break-all;
+    }
+
+    .k-catelog-level-3 {
+        font-family: 'Avenir', Helvetica, Arial, sans-serif;
+        margin-top: 3px;
+        font-size: 12px;
+        cursor: pointer;
+        word-break: break-all;
     }
 
     #doc-cateLog li {
-        display: block;
+        list-style-type: decimal;
+    }
+
+    #doc-cateLog ul{
+        padding-left: 2em;
     }
 
     .k-catelog-link-active {
-        color: red;
+        color: #f0381a;
+        font-weight: bolder;
     }
 </style>

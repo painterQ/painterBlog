@@ -24,9 +24,9 @@
         <div class="header-title-center header-title-center-before" ref="header-title-center">
             <div class="header-title-align-before" ref="header-title-align-1">
             <painter-tag v-for="t in $store.state.headerTags" :key="t" :inner="t"/></div>
-            <h1 class="index-header-title mix header-title-align-before" ref="header-title-align-2">{{$store.state.headerTitle}}</h1>
-            <h2 class="index-header-subtitle mix header-title-align-before" ref="header-title-align-3">{{$store.state.headerSubTitle}}</h2>
-            <div class="meta mix header-title-align-before" ref="header-title-align-4">{{$store.state.headerName}}&nbsp;on&nbsp;
+            <h1 class="index-header-title header-title-align-before" ref="header-title-align-2">{{$store.state.headerTitle}}</h1>
+            <h2 class="index-header-subtitle header-title-align-before" ref="header-title-align-3">{{$store.state.headerSubTitle}}</h2>
+            <div class="meta header-title-align-before" ref="header-title-align-4">{{$store.state.headerName}}&nbsp;on&nbsp;
                 {{new Date($store.state.headerTime) | moment}}
             </div>
             <div class="friendLinkPad" ref="friendLinkPad" v-show="!an">
@@ -108,13 +108,13 @@
                     htcb.add('header-title-center-after')
                     avatar.remove('avatar-before')
                     avatar.add('avatar-after')
-                    hta1.remove('header-title-align-before','mix')
+                    hta1.remove('header-title-align-before')
                     hta1.add('header-title-align-after')
-                    hta2.remove('header-title-align-before','mix')
+                    hta2.remove('header-title-align-before')
                     hta2.add('header-title-align-after')
-                    hta3.remove('header-title-align-before','mix')
+                    hta3.remove('header-title-align-before')
                     hta3.add('header-title-align-after')
-                    hta4.remove('header-title-align-before','mix')
+                    hta4.remove('header-title-align-before')
                     hta4.add('header-title-align-after')
                 } else {
                     this.$store.dispatch("setCurrentPath", this.$route.path)
@@ -123,13 +123,13 @@
                     avatar.remove('avatar-after')
                     avatar.add('avatar-before')
                     hta1.remove('header-title-align-after')
-                    hta1.add('header-title-align-before','mix')
+                    hta1.add('header-title-align-before')
                     hta2.remove('header-title-align-after')
-                    hta2.add('header-title-align-before','mix')
+                    hta2.add('header-title-align-before')
                     hta3.remove('header-title-align-after')
-                    hta3.add('header-title-align-before','mix')
+                    hta3.add('header-title-align-before')
                     hta4.remove('header-title-align-after')
-                    hta4.add('header-title-align-before','mix')
+                    hta4.add('header-title-align-before')
                 }
                 this.an = !this.an;
             }
@@ -248,9 +248,9 @@
         font-size: 2em;
     }
 
-    .mix {
-        mix-blend-mode: difference;
-    }
+    /*.mix {*/
+    /*    mix-blend-mode: difference;*/
+    /*}*/
 
     .meta {
         font-family: 'Merriweather', Georgia, serif;
@@ -295,11 +295,13 @@
 
 
     .fade-enter-active, .fade-leave-active {
-        transition: opacity 1s;
+        transition: top 0.5s;
+        top: 0px
     }
 
     .fade-enter, .fade-leave-to {
-        opacity: 0;
+        transition: top 0.5s;
+        top: -60px;
     }
 
     .friendLinkPad {

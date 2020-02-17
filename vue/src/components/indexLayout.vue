@@ -54,6 +54,7 @@
     .back-top-ani{
         animation: backtop 5s infinite;
         font-size: 1.5em;
+        box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
     }
 </style>
 <!-- Add "scoped" attribute to limit CSS to this component only -->

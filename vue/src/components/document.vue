@@ -13,7 +13,7 @@
             </div>
             <el-input type="text" id="path" v-model="path" class="editor-input"
                       placeholder="请输入路径">
-                <template slot="prepend">http://www.xixi201314.cn</template>
+                <template slot="prepend">http://www.xixi201314.cn/</template>
                 <template slot="append">.html</template>
             </el-input>
             <editor v-model="value"
@@ -79,7 +79,9 @@
     import 'tinymce/plugins/media'// 插入视频插件
     import 'tinymce/plugins/table'// 插入表格插件
     import 'tinymce/plugins/lists'// 列表插件
+    import 'tinymce/plugins/code'// 编辑源码插件
     import 'tinymce/plugins/wordcount'// 字数统计插件
+    import 'tinymce/plugins/codesample' //编辑代码插件
 
 
     import message from "../api/message";
@@ -118,12 +120,20 @@
                         insert: {title: '插入', items: 'lists image media table  | template hr'},
                         format: {title: '格式', items: 'bold italic underline strikethrough superscript subscript | formats | removeformat'},
                         table: {title: '表格', items: 'inserttable tableprops deletetable | cell row column'},
-                        tools: {title: '工具', items: 'spellchecker code'}
+                        tools: {title: '工具', items: 'spellchecker code codesample'}
                     },
-                    plugins: 'lists image media table wordcount',
-                    toolbar: 'undo redo |  styleselect | bold italic underline strikethrough superscript subscript |' +
+                    plugins: 'lists image media code table codesample wordcount',
+                    toolbar: 'undo redo |  styleselect | forecolor backcolor bold italic underline strikethrough superscript subscript |' +
                 ' alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | ' +
-                'lists image media table | removeformat',
+                'lists image media table | code codesample removeformat',
+                    codesample_languages: [
+                        {text: 'HTML/XML', value: 'markup'},
+                        {text: 'JavaScript', value: 'js'},
+                        {text: 'CSS', value: 'css'},
+                        {text: 'Go', value: 'go'},
+                        {text: 'C/C++', value: 'clike'},
+                        {text: 'JAVA', value: 'java'},
+                    ],
                     branding: false,
                     menubar: true,
                     //粘贴图片
@@ -198,12 +208,18 @@
             // 添加相关的事件，可用的事件参照文档=> https://github.com/tinymce/tinymce-vue => All available events
             // 需要什么事件可以自己增加
             async release() {
+                let path = "";
                 if (!this.path.startsWith('/')) {
-                    this.path = "/" + this.path
+                    path = "/" + this.path
                 }
+                if(path === "/" || this.title === ""){
+                    message.message(this, "Path和标题必须填写", 'fail');
+                    return
+                }
+
                 await this.$_postDoc({
                     title: this.title,
-                    path: this.path,
+                    path: path,
                     abstract: this.abstract,
                     tag: this.tag,
                     attr: this.top?1:0,
